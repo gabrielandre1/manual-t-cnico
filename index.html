@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual Técnico — SGP / Infra</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;--text:#e6edf3;--muted:#7d8590;--accent:#00d4aa;--accent2:#f78166;--accent3:#d2a8ff;--yellow:#e3b341;--blue:#58a6ff;--green:#3fb950;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;}
+#sidebar{width:260px;min-width:260px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+#sidebar-header{padding:20px 18px 14px;border-bottom:1px solid var(--border);}
+#sidebar-header .logo{font-size:13px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);}
+#sidebar-header .sub{font-size:11px;color:var(--muted);margin-top:2px;font-family:'JetBrains Mono',monospace;}
+#search-wrap{padding:12px 14px;border-bottom:1px solid var(--border);}
+#search{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:7px 10px 7px 30px;font-size:12px;font-family:'JetBrains Mono',monospace;outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%237d8590' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:9px center;}
+#search:focus{border-color:var(--accent);}
+#search::placeholder{color:var(--muted);}
+#nav{overflow-y:auto;flex:1;padding:8px 0;}
+#nav::-webkit-scrollbar{width:4px;}
+#nav::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 18px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--muted);transition:all .15s;border-left:3px solid transparent;text-transform:uppercase;letter-spacing:.04em;}
+.nav-item:hover{color:var(--text);background:var(--surface2);}
+.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(0,212,170,.06);}
+.nav-count{margin-left:auto;background:var(--surface2);border-radius:20px;padding:1px 7px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted);}
+.nav-item.active .nav-count{background:rgba(0,212,170,.15);color:var(--accent);}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#topbar{padding:14px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);gap:12px;flex-wrap:wrap;}
+#topbar h1{font-size:16px;font-weight:800;}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.badge{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 10px;color:var(--muted);}
+.tbtn{font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 12px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);transition:all .15s;}
+.tbtn:hover{border-color:var(--text);color:var(--text);}
+.tbtn.edit-active{border-color:var(--yellow);color:var(--yellow);background:rgba(227,179,65,.08);}
+.tbtn.export:hover{border-color:var(--blue);color:var(--blue);}
+.tbtn.reset-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+#edit-banner{display:none;background:rgba(227,179,65,.08);border-bottom:1px solid rgba(227,179,65,.2);padding:7px 28px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--yellow);}
+#content{flex:1;overflow-y:auto;padding:28px 32px;}
+#content::-webkit-scrollbar{width:6px;}
+#content::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.stats-row{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap;}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 20px;display:flex;align-items:center;gap:10px;}
+.stat-num{font-size:22px;font-weight:800;color:var(--accent);font-family:'JetBrains Mono',monospace;}
+.stat-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+.section-title{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin-bottom:32px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .2s;}
+.card:hover{border-color:rgba(0,212,170,.4);}
+.card-header{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);gap:8px;}
+.card-header-left{display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;min-width:0;}
+.card-tag{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:2px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0;}
+.tag-cmd{background:rgba(0,212,170,.12);color:var(--accent);}
+.tag-script{background:rgba(210,168,255,.12);color:var(--accent3);}
+.tag-link{background:rgba(88,166,255,.12);color:var(--blue);}
+.tag-info{background:rgba(227,179,65,.12);color:var(--yellow);}
+.tag-alert{background:rgba(247,129,102,.12);color:var(--accent2);}
+.card-title{font-size:13px;font-weight:600;color:var(--text);line-height:1.3;}
+.card-toggle{color:var(--muted);font-size:16px;transition:transform .2s;flex-shrink:0;}
+.card-actions{display:none;align-items:center;gap:5px;flex-shrink:0;}
+.card-body{padding:14px 16px;display:none;}
+.card-body.open{display:block;}
+.card-body p{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:10px;}
+.code-block{background:#0d1117;border:1px solid var(--border);border-radius:6px;margin:8px 0;}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-bottom:1px solid var(--border);background:var(--surface2);border-radius:6px 6px 0 0;}
+.code-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+.copy-btn{font-family:'JetBrains Mono',monospace;font-size:10px;background:none;border:1px solid var(--border);color:var(--muted);padding:2px 8px;border-radius:4px;cursor:pointer;transition:all .15s;}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent);}
+.copy-btn.copied{border-color:var(--green);color:var(--green);}
+pre{padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c9d1d9;overflow-x:auto;white-space:pre;line-height:1.7;}
+pre::-webkit-scrollbar{height:4px;}
+pre::-webkit-scrollbar-thumb{background:var(--border);}
+a.ext-link{color:var(--blue);font-size:12px;text-decoration:none;font-family:'JetBrains Mono',monospace;word-break:break-all;}
+a.ext-link:hover{text-decoration:underline;}
+.highlight{background:rgba(227,179,65,.3);border-radius:2px;padding:0 1px;}
+#no-results{display:none;text-align:center;padding:60px 20px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px;}
+.calc-card{background:var(--surface);border:1px solid rgba(0,212,170,.35);border-radius:8px;margin-bottom:20px;overflow:hidden;}
+.calc-card-header{padding:12px 16px;background:rgba(0,212,170,.06);border-bottom:1px solid rgba(0,212,170,.2);display:flex;align-items:center;gap:10px;}
+.calc-card-header span{font-size:13px;font-weight:700;color:var(--accent);}
+.calc-tag{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:2px 7px;border-radius:4px;background:rgba(0,212,170,.15);color:var(--accent);}
+.calc-body{padding:18px 20px;display:flex;flex-direction:column;gap:14px;}
+.calc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;}
+.calc-field{display:flex;flex-direction:column;gap:5px;}
+.calc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
+.calc-input,.calc-select{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 12px;font-size:12.5px;font-family:'JetBrains Mono',monospace;outline:none;width:100%;transition:border-color .15s;}
+.calc-input:focus,.calc-select:focus{border-color:var(--accent);}
+.calc-input.err{border-color:var(--accent2);}
+.calc-input.ok{border-color:var(--green);}
+.calc-select option{background:var(--surface2);}
+.calc-btn{background:var(--accent);color:#0d1117;border:none;border-radius:6px;padding:9px 22px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:all .15s;align-self:flex-start;}
+.calc-btn:hover{opacity:.85;}
+.calc-result{background:var(--bg);border:1px solid var(--border);border-radius:6px;overflow:hidden;display:none;}
+.calc-result.show{display:block;}
+.calc-result-header{padding:7px 14px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.calc-result-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:.08em;}
+.calc-copy{font-family:'JetBrains Mono',monospace;font-size:10px;background:none;border:1px solid var(--border);color:var(--muted);padding:2px 8px;border-radius:4px;cursor:pointer;transition:all .15s;}
+.calc-copy:hover{border-color:var(--accent);color:var(--accent);}
+.calc-result pre{color:var(--accent);font-size:12px;line-height:1.9;}
+.calc-error{background:rgba(247,129,102,.08);border:1px solid rgba(247,129,102,.3);border-radius:6px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--accent2);display:none;}
+.calc-error.show{display:block;}
+.calc-info-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+.calc-info-pill{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);}
+.calc-info-pill b{color:var(--yellow);}
+.ebt{font-size:10px;font-family:'JetBrains Mono',monospace;border-radius:4px;padding:3px 9px;cursor:pointer;border:1px solid;background:none;transition:all .15s;white-space:nowrap;}
+.ebt-edit{color:var(--accent3);border-color:rgba(210,168,255,.3);}
+.ebt-edit:hover{background:rgba(210,168,255,.1);}
+.ebt-del{color:var(--accent2);border-color:rgba(247,129,102,.3);}
+.ebt-del:hover{background:rgba(247,129,102,.1);}
+.fab{position:fixed;bottom:28px;right:28px;width:52px;height:52px;border-radius:50%;background:var(--accent);color:#0d1117;font-size:26px;font-weight:700;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(0,212,170,.35);display:none;align-items:center;justify-content:center;z-index:100;transition:all .15s;}
+.fab:hover{transform:scale(1.08);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:100%;max-width:680px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;}
+.modal-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-size:14px;font-weight:800;}
+.modal-close{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;padding:0 4px;}
+.modal-close:hover{color:var(--text);}
+.modal-body{padding:20px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
+.modal-body::-webkit-scrollbar{width:4px;}
+.modal-body::-webkit-scrollbar-thumb{background:var(--border);}
+.modal-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
+.fi,.fs,.ft{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 12px;font-size:12.5px;font-family:'Syne',sans-serif;outline:none;width:100%;transition:border-color .15s;}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--accent);}
+.ft{resize:vertical;min-height:70px;font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.6;}
+.fs option{background:var(--surface2);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.code-entry{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;}
+.code-entry-top{display:flex;gap:8px;align-items:center;}
+.code-entry-top .fi{flex:1;}
+.rm-btn{background:none;border:1px solid rgba(247,129,102,.3);color:var(--accent2);border-radius:4px;padding:3px 9px;font-size:10px;cursor:pointer;font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+.rm-btn:hover{background:rgba(247,129,102,.1);}
+.add-sub{background:none;border:1px dashed var(--border);color:var(--muted);border-radius:6px;padding:7px;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .15s;width:100%;}
+.add-sub:hover{border-color:var(--accent);color:var(--accent);}
+.link-entry{display:flex;gap:6px;align-items:center;}
+.link-entry .fi{flex:1;}
+.mbtn{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;border-radius:6px;padding:7px 16px;cursor:pointer;border:none;transition:all .15s;}
+.mbtn-cancel{background:none;border:1px solid var(--border);color:var(--muted);}
+.mbtn-cancel:hover{color:var(--text);border-color:var(--text);}
+.mbtn-save{background:var(--accent);color:#0d1117;}
+.mbtn-save:hover{opacity:.85;}
+.toast{position:fixed;bottom:90px;right:28px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 18px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);z-index:300;transform:translateY(20px);opacity:0;transition:all .2s;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.ok{border-color:var(--green);color:var(--green);}
+.toast.err{border-color:var(--accent2);color:var(--accent2);}
+
+.ssl-tab{flex:1;padding:9px 6px;font-size:10.5px;font-family:'JetBrains Mono',monospace;font-weight:700;background:none;border:none;border-right:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
+.ssl-tab:last-child{border-right:none;}
+.ssl-tab:hover{color:var(--text);background:var(--surface2);}
+.ssl-tab.active{color:var(--accent);background:rgba(0,212,170,.06);}
+.ssl-panel{padding:0;}
+.ssl-steps{display:flex;flex-direction:column;gap:0;}
+.ssl-step{border-bottom:1px solid var(--border);padding:14px 18px;}
+.ssl-step:last-child{border-bottom:none;}
+.ssl-step-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.ssl-step-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#0d1117;flex-shrink:0;}
+.ssl-step-title{font-size:13px;font-weight:700;color:var(--text);}
+.ssl-step-body{padding-left:32px;}
+.dtype-btn{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .15s;}
+.dtype-btn:hover{border-color:var(--accent);color:var(--accent);}
+.dtype-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,212,170,.1);}
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div id="sidebar-header">
+    <div class="logo">⚡ Manual Técnico</div>
+    <div class="sub">SGP · Infra · Redes</div>
+  </div>
+  <div id="search-wrap">
+    <input type="text" id="search" placeholder="Buscar comando, tópico..." autocomplete="off">
+  </div>
+  <nav id="nav"></nav>
+  <div style="padding:10px 14px;border-top:1px solid var(--border)">
+    <button onclick="openCatModal()" style="width:100%;background:none;border:1px dashed var(--border);color:var(--muted);border-radius:6px;padding:7px;font-size:11px;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">＋ Nova Categoria</button>
+  </div>
+</div>
+
+<div id="main">
+  <div id="topbar">
+    <h1 id="page-title">Todos os Tópicos</h1>
+    <div class="topbar-right">
+      <span class="badge" id="result-count"></span>
+      <button class="tbtn" id="editBtn" onclick="toggleEdit()">✏️ Editar</button>
+      <button class="tbtn export" onclick="exportHTML()">⬇ Exportar HTML</button>
+      <button class="tbtn reset-btn" onclick="resetData()" title="Restaurar dados originais">↺ Reset</button>
+    </div>
+  </div>
+  <div id="edit-banner">✏️ MODO EDIÇÃO — Use os botões nos cards para editar ou excluir. Clique ＋ para adicionar. Exporte o HTML para salvar permanentemente.</div>
+  <div id="content">
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-num" id="s-total">0</div><div class="stat-label">Tópicos</div></div>
+      <div class="stat-box"><div class="stat-num" id="s-cats">13</div><div class="stat-label">Categorias</div></div>
+      <div class="stat-box"><div class="stat-num" id="s-date" style="font-size:13px">—</div><div class="stat-label">Última edição</div></div>
+    </div>
+    <div id="no-results">Nenhum resultado para "<span id="no-q"></span>"</div>
+    <div id="cards-container"></div>
+  </div>
+</div>
+
+<button class="fab" id="fab" onclick="openModal(null)" title="Novo tópico">＋</button>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Novo Tópico</span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="fg">
+          <label class="fl">Categoria</label>
+          <select id="fCat" class="fs">
+            <option value="vpn">VPN &amp; Rotas</option>
+            <option value="olt">OLT &amp; ONU</option>
+            <option value="conc">Concentradores</option>
+            <option value="radius">RADIUS</option>
+            <option value="server">Servidor Linux</option>
+            <option value="cgnat">CGNAT</option>
+            <option value="ssl">SSL / Certificado</option>
+            <option value="script">Scripts Django</option>
+            <option value="gre">Túnel GRE</option>
+            <option value="snmp">Gráficos / SNMP</option>
+            <option value="ssh">SSH / Erros</option>
+            <option value="misc">Misc / Outros</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Tipo / Tag</label>
+          <select id="fTag" class="fs">
+            <option value="cmd">CMD — Comando</option>
+            <option value="script">SCRIPT — Script</option>
+            <option value="link">LINK — Referência</option>
+            <option value="info">INFO — Informação</option>
+            <option value="alert">ATENÇÃO — Alerta</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Título *</label>
+        <input type="text" id="fTitle" class="fi" placeholder="Ex: Verificar sessões PPPoE ativas">
+      </div>
+      <div class="fg">
+        <label class="fl">Descrição (opcional)</label>
+        <textarea id="fDesc" class="ft" rows="2" placeholder="Breve explicação..."></textarea>
+      </div>
+      <div class="fg">
+        <label class="fl">Blocos de Código</label>
+        <div id="fCodes"></div>
+        <button type="button" class="add-sub" onclick="addCode()">＋ Adicionar bloco de código</button>
+      </div>
+      <div class="fg">
+        <label class="fl">Links / Bookstack</label>
+        <div id="fLinks"></div>
+        <button type="button" class="add-sub" onclick="addLink()">＋ Adicionar link</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="mbtn mbtn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="mbtn mbtn-save" onclick="saveItem()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- CATEGORY MODAL -->
+<div class="modal-overlay" id="cat-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <span class="modal-title">Gerenciar Categorias</span>
+      <button class="modal-close" onclick="closeCatModal()">×</button>
+    </div>
+    <div class="modal-body" id="cat-modal-body"></div>
+    <div class="modal-footer" style="justify-content:space-between;align-items:center">
+      <span style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">Categorias padrão não podem ser excluídas</span>
+      <button class="mbtn mbtn-cancel" onclick="closeCatModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DEFAULT DATA ──────────────────────────────────────────────────────────
+const DEFAULT_DATA = [
+  {id:1,cat:'vpn',tag:'cmd',title:'Ver VPNs conectadas',desc:'Lista todas as sessões VPN ativas no servidor Accel-PPP.',codes:[{label:'bash',code:'accel-cmd show sessions'}]},
+  {id:2,cat:'vpn',tag:'cmd',title:'Ver tabela de rotas',codes:[{label:'bash',code:'ip r'}]},
+  {id:3,cat:'vpn',tag:'cmd',title:'Adicionar rota manualmente',desc:'Forçar rota estática via IP da VPN.',codes:[{label:'bash',code:'sudo /sbin/ip route add 172.29.77.2/32 via 172.16.122.11'}]},
+  {id:4,cat:'vpn',tag:'cmd',title:'Remover rota / terminar sessão',codes:[{label:'bash',code:'ip r d <rede>\naccel-cmd terminate ip 172.16.116.11\naccel-cmd terminate username login_da_vpn'}]},
+  {id:5,cat:'vpn',tag:'script',title:'Criar arquivo de rota persistente (ip-up.d)',desc:'Arquivo em /etc/ppp/ip-up.d/PERFIL. Após criar: chmod +x',codes:[{label:'Uma VPN / Uma rede',code:'#!/bin/bash\nsleep 8\ncase "$5" in\n    172.16.119.29)\n        /sbin/ip route add 10.50.50.2/32 via $5\n        ;;\n    *)\nesac\nexit 0'},{label:'Uma VPN / Múltiplas redes',code:'#!/bin/bash\nsleep 8\ncase "$5" in\n    172.16.116.14)\n        /sbin/ip route add REDE01/32 via $5\n        /sbin/ip route add REDE02/32 via $5\n        ;;\n    *)\nesac\nexit 0'},{label:'Múltiplas VPNs',code:'#!/bin/bash\nsleep 8\ncase "$5" in\n    172.16.116.14)\n        /sbin/ip route add REDE01/32 via $5\n        ;;\n    172.16.239.11)\n        /sbin/ip route add 10.20.1.2/32 via $5\n        ;;\n    *)\nesac\nexit 0'},{label:'permissão de execução',code:'chmod +x /etc/ppp/ip-up.d/PERFIL'}]},
+  {id:6,cat:'vpn',tag:'cmd',title:'Ver rotas de um perfil',codes:[{label:'bash',code:'cat /etc/ppp/ip-up.d/"PERFIL"'}]},
+  {id:7,cat:'vpn',tag:'cmd',title:'SSHuttle — túnel de rota via IP público',desc:'Cria rota de um IP público para um IP local.',codes:[{label:'bash',code:'sshuttle -r usuario@ip_global:porta ip_local\n# Exemplo:\nsshuttle -r suportetsmx@177.52.37.24:13770 172.16.129.11/22'}]},
+  {id:8,cat:'olt',tag:'info',title:'Cadastrar OLT com IP NAT',desc:'Sequência quando a OLT não está se comunicando.',codes:[{label:'passos',code:'1. Acessar concentrador e criar redirecionamento para OLT\n   → bookstack: configuracao-de-redirecionamento-na-rb-para-a-olt\n2. Cadastrar OLT no SGP\n3. Cadastrar PON'}]},
+  {id:9,cat:'olt',tag:'link',title:'Requisitos para integração de OLT no SGP',links:['https://bookstack.tsmx.net.br/books/integracao-olt/page/00-requisitos-para-integracao-de-uma-olt-no-sgp']},
+  {id:10,cat:'olt',tag:'alert',title:'OLT não comunicando — criar arquivo de rota',desc:'Verificar se a VPN está conectada e se existe a rota estática.',codes:[{label:'ver arquivo',code:'cat /etc/ppp/ip-up.d/"perfil"'},{label:'exemplo rota OLT',code:'#!/bin/bash\nsleep 8\ncase "$5" in\n    172.16.121.11)\n        /sbin/ip route add 172.29.0.2/32 via $5\n        /sbin/ip route add 172.17.181.10/32 via $5\n        ;;\n    *)\nesac\nexit 0'},{label:'subir rota imediatamente',code:'sudo /sbin/ip route add IP_DA_OLT/32 via IP_VPN_SERVIDOR'}]},
+  {id:11,cat:'olt',tag:'link',title:'Migração de ONUs — Scripts Gerais',desc:'Passos: Backup ONUs (origem/destino Excel), backup OLTs, backup base SGP.',links:['https://bookstack.tsmx.net.br/books/procedimentos-em-lote/page/migracao-de-onus-scripts-gerais']},
+  {id:12,cat:'olt',tag:'alert',title:'Erro autorização de ONU — slot/PON não cadastrado',desc:"Erro 'unicode object has no attribute get': slot e PON não cadastrados no SGP para essa ONU."},
+  {id:13,cat:'olt',tag:'link',title:'CTO não aparece na hora de autorizar ONU',desc:'Solução: desmarcar "verificar PON" no cadastro das CTOs.',links:['https://bookstack.tsmx.net.br/books/procedimentos-em-lote/page/desmarcar-marcar-o-verificar-pon-da-cto-em-lote']},
+  {id:14,cat:'olt',tag:'cmd',title:'Rota para OLT via Túnel GRE',codes:[{label:'bash',code:'ip ro add $IP_OLT via $IP_T_SGP'}]},
+  {id:15,cat:'conc',tag:'cmd',title:'Concentrador Huawei — comandos de sessão',codes:[{label:'display',code:'display access-user username LOGIN verbose\ndisplay access-user username LOGIN brief\ndisplay access-user domain DOMINIO\ndisplay access-user authen-method radius username LOGIN verbose\ndisplay aaa online-fail-record username LOGIN\nDisplay aaa online-fail-record\ntest aaa group sgp_PROVEDOR sgpsgp testesgp legacy'}]},
+  {id:16,cat:'conc',tag:'cmd',title:'Concentrador Cisco — comandos de sessão',codes:[{label:'cisco',code:'show pppoe all\nshow pppoe session all\nshow subscriber session username USUARIO\nshow pppoe throttles\nshow pppoe summary\nshow pppoe statistics\nshow pppoe interfaces all\ntest aaa group sgp_PROVEDOR sgpsgp testesgp legacy\nsession username USUARIO'}]},
+  {id:17,cat:'conc',tag:'cmd',title:'Derrubar clientes — Cisco & PPPoE',codes:[{label:'cisco',code:'cut access-user domain sgp_PROVEDOR\ncut access-user username 29260136806 all'},{label:'accel',code:'accel-cmd terminate ip 172.16.116.11'}]},
+  {id:18,cat:'conc',tag:'link',title:'Integrar concentrador Cisco',desc:'Após integrar, rodar script no webshell para aplicar policies nos planos.',links:['https://bookstack.tsmx.net.br/books/integracao-nas/page/integracao-concentrador-cisco','https://bookstack.tsmx.net.br/books/procedimentos-em-lote/page/setar-ou-remover-policy-in-policy-out-em-todos-os-planos']},
+  {id:19,cat:'conc',tag:'cmd',title:'Huawei — Verificar status do RADIUS',codes:[{label:'huawei',code:'display radius-server configuration'}]},
+  {id:20,cat:'conc',tag:'cmd',title:'Mikrotik — mudar autenticação para PAP',codes:[{label:'mikrotik',code:'interface pppoe-server server set authentication=pap [find .id!=999]\n# ou pap+chap:\ninterface pppoe-server server set authentication=pap,chap [find .id!=999]'}]},
+  {id:21,cat:'conc',tag:'cmd',title:'Mikrotik — Firewall / NAT para OLT',codes:[{label:'mikrotik script',code:':global PORTINT "23"\n:global PORTEXT "2335"\n:global IPINT "192.168.100.2"\n:global IPEXT "172.16.123.12"\n\n/ip firewall nat add chain=srcnat comment="Redirecionamento OLT" dst-address="$IPINT" action=masquerade\n/ip firewall nat add chain=dstnat comment="Redirecionamento OLT" dst-address="$IPEXT" protocol=tcp dst-port="$PORTEXT" action=dst-nat to-addresses="$IPINT" to-ports="$PORTINT"\n/ip firewall nat move [find where comment="Redirecionamento OLT"] 0'}]},
+  {id:22,cat:'conc',tag:'alert',title:'Huawei NAS sem pegar pool de bloqueio',desc:'Caso não conectar pelo IP privado, tentar o público.',codes:[{label:'huawei',code:'radius-server authorization IP_SGP destination-port 3799 server-group sgp_PROVEDOR shared-key sgpradius@PROVEDOR\nradius local-ip all\ncomm'}]},
+  {id:23,cat:'radius',tag:'cmd',title:'Debug do RADIUS — status e log',codes:[{label:'bash',code:'systemctl status radiusd_sgp\ntail -f /var/log/radius_PERFIL/radius.log\ntail -f /var/log/accel-ppp/accel-ppp.log'}],links:['https://bookstack.tsmx.net.br/books/radius/page/radius-em-modo-debug']},
+  {id:24,cat:'radius',tag:'cmd',title:'Monitorar tráfego RADIUS com tcpdump',codes:[{label:'bash',code:'# Monitorar requisições\ntcpdump -i any udp port 3513 -nn -vv\n\n# Ver se está enviando interim\ntcpdump -i any udp port 3513 -nn -vv | grep Acct-Status-Type\n\n# Por interface específica\ntcpdump -n -vvv -i INTERFACE port 8813'}]},
+  {id:25,cat:'radius',tag:'cmd',title:'Rebuild RADIUS',codes:[{label:'local',code:'python /usr/local/sgp/sgp/LOCAL/manage.py rebuildradius'},{label:'nuvem',code:'python /usr/local/sgp/sgp/PROVEDOR/manage.py rebuildradius'}]},
+  {id:26,cat:'radius',tag:'link',title:'Clientes suspensos logam mas não ficam online',links:['https://bookstack.tsmx.net.br/books/integracao-nas/page/clientes-suspensos-logam-e-nao-ficam-online-no-sgp','https://bookstack.tsmx.net.br/books/procedimentos-servidor/page/configurar-radius-para-cliente-suspenso-nao-autenticar']},
+  {id:27,cat:'radius',tag:'link',title:'Motivos de desconexão no log do RADIUS',links:['https://wiki.sgp.net.br/wiki.php?id=motivos_de_encerramento_de_sessao_no_radius']},
+  {id:28,cat:'radius',tag:'cmd',title:'Rotina SGPJob — limpar jobs presos',codes:[{label:'python shell',code:'from apps.admcore import models\nprint(models.Job.objects.all().count())\nfor j in models.Job.objects.all():\n    print(j)'},{label:'bash',code:'python /usr/local/sgp/sgp/PROVEDOR/manage.py sgpjob'}]},
+  {id:29,cat:'server',tag:'cmd',title:'Verificar CPU, memória e processos',codes:[{label:'bash',code:'top                      # processos em tempo real\nfree -m                  # memória RAM e swap\nwatch -n 1 free -m       # atualizar a cada 1s'}]},
+  {id:30,cat:'server',tag:'cmd',title:'Verificar disco',codes:[{label:'bash',code:'df -h                    # uso por partição\ndf -lh                   # discos locais\ndu -sh *                 # uso por pasta\nlsblk                    # tamanho das partições\nsudo hdparm -t /dev/sdX  # velocidade do disco'}]},
+  {id:31,cat:'server',tag:'cmd',title:'Limpar cache de memória',desc:'Libera memória usada por buffers e caches do sistema.',codes:[{label:'bash',code:'sync && sysctl vm.drop_caches=3'}]},
+  {id:32,cat:'server',tag:'cmd',title:'Reiniciar serviços do RNNAT',codes:[{label:'bash',code:'sudo su\n/etc/init.d/postgresql restart\n/etc/init.d/nginx restart\nsystemctl restart gunicorn_NOME_PERFIL.service'}]},
+  {id:33,cat:'server',tag:'cmd',title:'Criar / editar rotinas cron',codes:[{label:'crontab',code:'nano /etc/cron.d/backup\n\nSHELL=/bin/sh\nPATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin\n00 1 * * *  root /usr/local/bin/remove_session_dup.sh > /dev/null 2>&1\n10 1 * * *  root /usr/local/bin/remove_session_invalid.sh > /dev/null 2>&1\n29 2 * * *  root find /backup -mtime +5 -name "*pgsql_db*" -exec rm {} ;\n00 3 * * *  root /usr/local/bin/backup_pgsql.sh > /dev/null 2>&1\n0 0 */89 * * certbot renew --quiet --nginx && nginx -s reload'}]},
+  {id:34,cat:'server',tag:'cmd',title:'CheckModels — restaurar tabelas',codes:[{label:'bash',code:'cd /usr/local/sgp/sgp; for i in $(ls); do echo $i; python $i/manage.py checkmodels --fix; done'}]},
+  {id:35,cat:'server',tag:'link',title:'Atualização de SGP Local (tmux)',links:['https://bookstack.tsmx.net.br/books/procedimentos-servidor/page/atualizacao-de-sgp-local']},
+  {id:36,cat:'server',tag:'link',title:'Disco cheio — SGP Local',links:['https://bookstack.tsmx.net.br/books/procedimentos-servidor/page/disco-cheio-sgp-local']},
+  {id:37,cat:'cgnat',tag:'script',title:'Cadastrar CGNAT NETMAP em lote',desc:'IMPORTANTE: alterar cgnattype para 2.',codes:[{label:'python shell',code:"cgnat = [\n    ['192.141.157.96/28', '100.64.3.224/28', '63522', '1007'],\n]\nfor i in cgnat:\n    s = models.Cgnat()\n    s.ports_start = i[2]\n    s.ports_addr  = i[3]\n    s.src_addr    = i[1]\n    s.to_addr     = i[0]\n    s.cgnattype   = 2  # ← IMPORTANTE\n    s.save()\nfor i in models.Cgnat.objects.all():\n    models.Cgnat.objects.get(id=i.id).update_ips()\nprint('Finalizado')"}],links:['https://bookstack.tsmx.net.br/books/cgnat/page/documentacao-cgnat-atualizado']},
+  {id:38,cat:'cgnat',tag:'cmd',title:'Gerar script CGNAT via Mikrotik API',codes:[{label:'bash',code:'python3 mikrotik.py'}]},
+  {id:39,cat:'cgnat',tag:'link',title:'Setar NAS no CGNAT em lote',links:['https://bookstack.tsmx.net.br/books/cgnat/page/setarremover-nas-no-cadastro-do-cgnat-em-lote-9u1']},
+  {id:40,cat:'ssl',tag:'info',title:'Instalar / Gerar certificado SSL (certbot)',codes:[{label:'instalação',code:'apt install certbot -y'},{label:'dry-run',code:'certbot certonly --register-unsafely-without-email --webroot -d DOMINIO --dry-run'},{label:'gerar certificado',code:'certbot certonly --register-unsafely-without-email --webroot -w /var/www -d DOMINIO'},{label:'verificar validade',code:'certbot certificates'}]},
+  {id:41,cat:'ssl',tag:'cmd',title:'Editar nginx — well-known para certbot',codes:[{label:'nginx',code:'location /.well-known/ {\n    root /var/www;\n}'}]},
+  {id:42,cat:'ssl',tag:'cmd',title:'Atualizar certificado no nginx',codes:[{label:'sites-enabled/sgp',code:'ssl_certificate /etc/letsencrypt/live/DOMINIO/fullchain.pem;\nssl_certificate_key /etc/letsencrypt/live/DOMINIO/privkey.pem;\n# ssl_certificate /etc/nginx/ssl/server.crt;\n# ssl_certificate_key /etc/nginx/ssl/server.key;'}]},
+  {id:43,cat:'ssl',tag:'link',title:'Documentação completa SSL/TLS',links:['https://bookstack.tsmx.net.br/books/procedimentos-servidor/page/certificado-ssltls-https']},
+  {id:44,cat:'script',tag:'script',title:'Setar ONU em lote (atrelar serviço/login)',codes:[{label:'python shell',code:"onus = [\n    ['485754433203A368', 'login.cliente'],\n]\nfrom apps.netcore.models import ONU\nfrom apps.admcore.models import ServicoInternet\nfor o in onus:\n    try:\n        ONU.objects.filter(phy_addr__iexact=o[0]).update(\n            service=ServicoInternet.objects.get(login=o[1])\n        )\n        print('Finalizado')\n    except:\n        pass"}]},
+  {id:45,cat:'script',tag:'script',title:'Alterar atributo RADIUS em lote nos planos',codes:[{label:'python shell',code:'radius = {\n    "reply": [{\n        "attribute": "ERX-Service-Activate:1",\n        "value": \'"SGP-PROVEDOR-Limit({upload},{download})"\',\n        "op": ":="\n    }]\n}\nfrom apps.admcore import models\nfrom apps.netcore.utils.radius import manage\nmodels.PlanoInternet.objects.all().update(radius_json=radius)\nm = manage.Manage()\nfor i in models.PlanoInternet.objects.all():\n    m.delRadiusPlano(i)\n    m.addRadiusPlano(i)'}]},
+  {id:46,cat:'script',tag:'script',title:'Setar velocidade de plano em Megas (Mikrotik)',codes:[{label:'python shell',code:'radius = {"mikrotik_format": "m"}\nfrom apps.admcore import models\nfrom apps.netcore.utils.radius import manage\nmodels.PlanoInternet.objects.all().update(radius_json=radius)\nm = manage.Manage()\nfor i in models.PlanoInternet.objects.all():\n    m.delRadiusPlano(i)\n    m.addRadiusPlano(i)\n    print(i)'}]},
+  {id:47,cat:'script',tag:'script',title:'Alterar portas de CTOs em lote',codes:[{label:'python shell',code:'from apps.netcore import models\nTOTAL_PORTAS = 16\nALTERAR = False\nsplitters = models.Splitter.objects.filter(ports=0)\nfor o in splitters:\n    print("CTO:{} PON:{} {} -> {}".format(o.ident,o.pon,o.ports,TOTAL_PORTAS))\nif ALTERAR:\n    qtd = splitters.update(ports=TOTAL_PORTAS)\n    print("{} registros atualizados.".format(qtd))'}]},
+  {id:48,cat:'script',tag:'script',title:'Coletar nível de sinal OLT em lote',codes:[{label:'python shell',code:'from django.core.management import call_command\ncall_command("oltinfo", optical="sim")'}]},
+  {id:49,cat:'gre',tag:'cmd',title:'Verificar se existe Túnel GRE',codes:[{label:'bash',code:'ip -c add'}]},
+  {id:50,cat:'gre',tag:'script',title:'Criar Túnel GRE entre SGP e OLT Cisco',codes:[{label:'variáveis',code:'NOME_PROV=hi3telecom\nIP_NAS=177.12.146.47\nIP_SGP=45.178.142.88\nIP_T_SGP=172.31.255.253\nIP_T_NAS=172.31.255.254'},{label:'servidor linux',code:'ip tunnel add TUNNEL_$NOME_PROV mode gre remote $IP_NAS local $IP_SGP ttl 255\nip link set TUNNEL_$NOME_PROV up\nip addr add dev TUNNEL_$NOME_PROV $IP_T_SGP\nip ro add $IP_T_NAS via $IP_T_SGP src 172.16.116.1'},{label:'OLT Cisco',code:'enable\nconf t\ninterface tunnel 2021\n ip address 172.31.255.254 255.255.255.252\n ip mtu 1400\n tunnel source 177.12.146.47\n tunnel destination 45.178.142.88\n tunnel mode gre ip\nend\ncopy running-config startup-config\nip ro add 10.100.100.10 via 172.31.255.253'}]},
+  {id:51,cat:'snmp',tag:'cmd',title:'Testar coleta SNMP',codes:[{label:'bash — Cisco',code:'snmpwalk -c SGP-GRAPHICs -v2c IP_CONCENTRADOR .1.3.6.1.4.1.9.9.150.1.1.3.1.2'},{label:'bash — Huawei',code:'snmpwalk -c SGPGRAPHICsPBTELECOM -v2c IP .1.3.6.1.4.1.2011.5.2.1.15.1.3'}]},
+  {id:52,cat:'snmp',tag:'info',title:'OIDs para gráficos de tráfego',codes:[{label:'oids',code:'oid_ifnames   = .1.3.6.1.4.1.9.9.150.1.1.3.1.2\noid_vaindex   = .1.3.6.1.4.1.9.9.150.1.1.3.1.8\noid_inoctets  = .1.3.6.1.2.1.2.2.1.10\noid_outoctets = .1.3.6.1.2.1.2.2.1.16'}],links:['https://bookstack.tsmx.net.br/books/integracao-nas/page/coleta-graficos-e-consumo-em-realtime']},
+  {id:53,cat:'snmp',tag:'cmd',title:'Configurar SNMP no concentrador',codes:[{label:'cisco',code:'snmp-server community SGP-GRAPHICs RO\nsnmp-server host 45.187.206.24 version 2c SGP-GRAPHICs\nend\nwrit'}]},
+  {id:54,cat:'ssh',tag:'alert',title:'Erro SSH ao acessar OLT / Servidor',codes:[{label:'método 1',code:'# nano /etc/ssh/ssh_config\nHost IP_OLT\n  KexAlgorithms +diffie-hellman-group1-sha1\n  Ciphers +aes128-cbc'},{label:'método 2',code:'Host 172.16.61.2\n  HostKeyAlgorithms=+ssh-dss\n  KexAlgorithms +diffie-hellman-group1-sha1\n  Ciphers +aes128-cbc'},{label:'legacy global',code:'KexAlgorithms +diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1\nCiphers +aes128-cbc\nHostKeyAlgorithms +ssh-rsa\n\n/etc/init.d/ssh restart'}],links:['https://bookstack.tsmx.net.br/books/procedimentos-servidor/page/erro-sgp-acessar-olt-via-ssh']},
+  {id:55,cat:'ssh',tag:'link',title:'Erro SSH Cisco — ssh_dispatch_run_fatal',links:['https://bookstack.tsmx.net.br/books/integracao-nas/page/erro-acesso-ssh-cisco-ssh-dispatch-run-fatal']},
+  {id:56,cat:'misc',tag:'link',title:'Mapa FTTH — Procedimentos',links:['https://bookstack.tsmx.net.br/books/procedimentos-mapa-ftth']},
+  {id:57,cat:'misc',tag:'link',title:'Switch Template — Integração',links:['https://bookstack.tsmx.net.br/books/integracao-switch-template/page/integracao-switch-template']},
+  {id:58,cat:'misc',tag:'cmd',title:'RADIUS — Firewall rules Mikrotik (sem NAT)',codes:[{label:'mikrotik',code:'/ip firewall filter\nadd chain=input  src-address=172.16.116.1 action=accept comment="Aceita entrada SGP"\nadd chain=output dst-address=172.16.116.1 action=accept comment="Aceita saída SGP"'}]},
+  {id:59,cat:'misc',tag:'link',title:'RADIUS DHCP Randomico (trocar IP ao reconectar)',links:['https://bookstack.tsmx.net.br/books/procedimentos-servidor/page/radius-dhcp-randomico']},
+  {id:60,cat:'misc',tag:'link',title:'Alterar URL / Domínio do SGP',desc:'Antes de alterar, validar domain com nslookup.',codes:[{label:'bash',code:'nslookup DOMINIO'}],links:['https://bookstack.tsmx.net.br/books/procedimentos-servidor/page/alterar-url-e-realizar-ajustes-no-sgp']},
+  // ─── CISCO ───────────────────────────────────────────────────
+  {id:61,cat:'conc',tag:'script',title:'Integração Concentrador Cisco — Script Completo',
+   desc:'Script completo de integração. Substituir: PROVEDOR, IP_DO_RADIUS, PORT_AUT, PORT_ACC, LoopBackX. Fazer backup antes e depois.',
+   codes:[
+    {label:'passo 0 — desabilitar paginação',code:'terminal length 0'},
+    {label:'conf t — entrar em conf',code:'conf t'},
+    {label:'1. AAA Group Server + Radius Server',code:`aaa group server radius sgp_PROVEDOR
+ server-private IP_DO_RADIUS auth-port PORT_AUT acct-port PORT_ACC key sgpradius@PROVEDOR
+ ip radius source-interface LoopBackX
+ exit
+
+radius server sgp_PROVEDOR
+ address ipv4 IP_DO_RADIUS auth-port PORT_AUT acct-port PORT_ACC
+ timeout 30
+ key sgpradius@PROVEDOR
+ exit`},
+    {label:'1.1 alternativo (modelo antigo)',code:`radius-server host IP_DO_RADIUS auth-port PORT_AUT acct-port PORT_ACC key sgpradius@PROVEDOR
+radius-server timeout 30`},
+    {label:'2. Políticas AAA',code:`aaa authentication login default local
+aaa authentication enable default enable
+aaa authentication ppp default group radius local
+aaa authorization console
+aaa authorization config-commands
+aaa authorization exec default local
+aaa accounting delay-start all
+aaa accounting session-duration ntp-adjusted
+aaa accounting update periodic 10
+aaa accounting include auth-profile framed-ip-address
+aaa accounting include auth-profile framed-ipv6-prefix
+aaa accounting include auth-profile delegated-ipv6-prefix
+aaa accounting exec default start-stop group radius
+aaa authentication ppp sgp_PROVEDOR group sgp_PROVEDOR
+aaa accounting network sgp_PROVEDOR start-stop group sgp_PROVEDOR
+aaa accounting exec sgp_PROVEDOR start-stop group sgp_PROVEDOR
+aaa authorization subscriber-service sgp_PROVEDOR local group sgp_PROVEDOR
+aaa authorization configuration sgp_PROVEDOR group sgp_PROVEDOR
+aaa authorization exec sgp_PROVEDOR group sgp_PROVEDOR
+aaa authorization network sgp_PROVEDOR group sgp_PROVEDOR`},
+    {label:'2.1 Atributos RADIUS',code:`no radius-server attribute 77 include-in-acct-req
+no radius-server attribute 77 include-in-access-req
+radius-server attribute 6 on-for-login-auth
+radius-server attribute 6 support-multiple
+radius-server attribute 8 include-in-access-req
+radius-server attribute 32 include-in-access-req
+radius-server attribute 32 include-in-accounting-req
+radius-server attribute 55 include-in-acct-req
+radius-server attribute 55 access-request include
+radius-server attribute 25 access-request include
+radius-server attribute nas-port format d
+radius-server attribute 31 mac format one-byte delimiter colon upper-case
+radius-server attribute 31 send nas-port-detail mac-only
+radius-server attribute 31 remote-id
+radius-server attribute nas-port-id include circuit-id
+radius-server retransmit 6
+radius-server timeout 30
+radius-server deadtime 1
+radius-server authorization default Framed-Protocol ppp
+radius-server vsa send cisco-nas-port`},
+    {label:'3. Disconnect (porta 3799)',code:`aaa server radius dynamic-author
+ client IP_DO_RADIUS server-key sgpradius@PROVEDOR
+ port 3799
+ auth-type any
+ ignore session-key
+ ignore server-key
+ exit`},
+    {label:'4. Policy-map (controle de banda dinâmico)',code:`policy-map OUT-PADRAO
+ class class-default
+ police cir 2000000000
+ conform-action transmit
+ exceed-action drop
+ exit
+ exit
+ exit
+policy-map IN-PADRAO
+ class class-default
+ police cir 2000000000
+ conform-action transmit
+ exceed-action drop
+ exit
+ exit
+ exit`},
+    {label:'5. Virtual-Template77',code:`interface Virtual-Template77
+ mtu 1492
+ ip unnumbered LoopbackX
+ ip nat inside
+ keepalive 12
+ ppp authentication pap chap ms-chap ms-chap-v2 sgp_PROVEDOR
+ ppp authorization sgp_PROVEDOR
+ ppp accounting sgp_PROVEDOR
+ service-policy input IN-PADRAO
+ service-policy output OUT-PADRAO
+ exit`},
+    {label:'6. BBA-Group PPPoE',code:`bba-group pppoe sgp_PROVEDOR
+ virtual-template 77
+ sessions per-mac limit 1
+ sessions per-vlan limit 16000
+ pado delay 0
+ exit`},
+    {label:'7. SNMP',code:`snmp-server community SGP-GRAPHICs RO
+snmp-server host IP_DO_RADIUS version 2c SGP-GRAPHICs`},
+    {label:'8. Bloqueio IPv6',code:`ipv6 local pool bloqueiov6pd 2001:DB1:100::/43 56
+ipv6 local pool bloqueiov6prefix 2001:DB8:200::/48 64
+
+ipv6 dhcp pool bloqueiov6pd
+prefix-delegation pool bloqueiov6pd lifetime 1800 600
+dns-server 2001:4860:4860::8888
+dns-server 2001:4860:4860::8844
+accounting sgp_PROVEDOR
+exit`},
+    {label:'9. Testar RADIUS',code:'test aaa group sgp_PROVEDOR sgpsgp testesgp legacy'},
+    {label:'10. Salvar',code:'end\nwrite'},
+    {label:'Se AAA não reconhecido — habilitar módulo',code:'conf t\naaa new-model\nend\nwr'},
+    {label:'11. Parâmetros JSON no NAS (SGP)',code:`{
+  "reply": [
+    {
+      "attribute": "Filter-Id",
+      "value": "ANY",
+      "op": "!*"
+    }
+  ]
+}`},
+    {label:'12. Rotina de coleta de gráficos (cron)',code:'*/5 * * * * root nice -n 5 timeout 60 wget -q --no-check-certificate http://127.0.0.1:8000/ws/commands/snmp_cache/180?nastype=cisco -O- &> /dev/null'},
+    {label:'13. Recriar RADIUS',code:`from apps.netcore.utils.radius import manage
+print("recriar radius Iniciando")
+manage.Manage().ResetRadius()
+print("recriar radius Feito")`}
+  ]},
+
+  {id:62,cat:'conc',tag:'info',title:'Cisco — Variáveis no SGP',
+   desc:'Variáveis disponíveis para Cisco. Usar somente as necessárias.',
+   codes:[{label:'variáveis',code:`CISCO_DYNAMIC_POLICY  → Controle de banda via radius (dinâmica)    → valor: 1
+CISCO_POLICY          → Controle de banda via profile (fixo)       → valor: 1
+CISCO_POOL_ENABLE     → Envia atributo Pool name                    → valor: 1
+TRAFFIC_UPDATE        → Coleta de gráfico                          → valor: 15000
+TRAFFIC_UPDATE_CISCO  → Coleta de gráfico                          → valor: 12500`}]},
+
+  {id:63,cat:'conc',tag:'cmd',title:'Cisco — Debug PPPoE e RADIUS',
+   desc:'Ativar debug para acompanhar negociação PPPoE. Sempre encerrar com "no debug all" ao finalizar.',
+   codes:[
+    {label:'debug PPPoE e PPP',code:`debug pppoe events
+debug ppp negotiation
+debug ppp authentication
+debug ppp error
+debug radius accounting
+debug radius authentication
+debug radius verbose
+terminal monitor`},
+    {label:'debug por login específico',code:`debug pppoe events
+debug pppoe packets
+debug pppoe errors
+debug condition username LOGIN_PPPOE`},
+    {label:'debug SNMP',code:'debug snmp packets'},
+    {label:'debug porta 3799',code:`no debug all
+debug ip udp port 3799
+terminal monitor`},
+    {label:'encerrar debug',code:`terminal no monitor
+no debug all`}
+  ]},
+
+  {id:64,cat:'conc',tag:'cmd',title:'Cisco — Criar Usuário Local',
+   codes:[{label:'cisco',code:`conf t
+username sgpsgp privilege 15 password sgp142536
+end
+write`}]},
+
+  {id:65,cat:'conc',tag:'cmd',title:'Cisco — Verificar Sessões / Clientes Conectados',
+   codes:[
+    {label:'show pppoe',code:`show pppoe all
+show pppoe session all
+show subscriber session username NOME
+show pppoe throttles
+show pppoe summary
+show pppoe session
+show pppoe statistics
+show pppoe interfaces all`},
+    {label:'show ppp all (com filtro)',code:`show ppp all
+# filtrar: show ppp all | ?
+# retorno esperado:
+# Interface/ID OPEN+ Nego* Fail- Stage Peer Address  Peer Name
+# Vi1.1        LCP+ PAP+ IPCP+  LocalT 100.64.0.1   daniel.teste`},
+    {label:'verificar sessões com IP 0.0.0.0',code:'sh ppp all | in 0.0.0.0'},
+    {label:'verificar PD IPv6',code:'show ipv6 dhcp binding'},
+    {label:'desconectar sessão PPPoE',code:`clear subscriber session identifier interface <interface_pppoe>
+# ou
+clear subscriber session username NOME_PPPOE`}
+  ]},
+
+  {id:66,cat:'conc',tag:'cmd',title:'Cisco — Verificar Senha e Autenticação PPPoE',
+   codes:[
+    {label:'checar senha',code:`show running-config | include LOGIN_PPPOE
+show running-config | section LOGIN_PPPOE
+show running-config | include password`},
+    {label:'verificar se usa RADIUS',code:`show running-config | include radius
+show running-config | include aaa
+show running-config | section aaa`}
+  ]},
+
+  {id:67,cat:'conc',tag:'cmd',title:'Cisco — Comandos Básicos (show, ping, trace)',
+   codes:[{label:'básicos',code:`show running-config
+show interface brief
+show route summary
+show version
+show arp
+show licence
+show processes cpu
+show memory summary
+show interface interface
+show policy-map
+show protocols
+show interfaces be x details
+ping ip_address
+traceroute ip_address
+show access-lists
+show bgp`}]},
+
+  {id:68,cat:'conc',tag:'cmd',title:'Cisco — RADIUS, BBA-Group, SNMP, POOL',
+   codes:[
+    {label:'RADIUS',code:`show aaa servers
+show radius server-group RADIUS_GRUP
+show aaa dead-criteria radius RADIUS_GRUP
+test aaa show radius
+show running-config all | include vsa
+show radius statistics
+test aaa group radius USER PASSWORD legacy`},
+    {label:'BBA-Group',code:'show running-config | section bba-group'},
+    {label:'SNMP',code:`show snmp
+snmp-server community public RO`},
+    {label:'POOL',code:`show ip dhcp pool
+show ipv6 dhcp pool
+show ip local pool`}
+  ]},
+
+  {id:69,cat:'conc',tag:'cmd',title:'Cisco — Logs, Data e Hora',
+   codes:[{label:'cisco',code:`show log | section include ppp
+show logging
+show clock
+clock set HH:MM:SS DAY MONTH YEAR
+conf t
+  clock timezone GMT -3
+  service timestamps log datetime localtime
+end`}]},
+
+  // ─── HUAWEI ──────────────────────────────────────────────────
+  {id:70,cat:'conc',tag:'script',title:'Integração Concentrador Huawei NE20/40/8000 — Script Completo',
+   desc:'Substituir: PROVEDOR, IP_SGP, IP_HUAWEI, PORT_AUT, PORT_ACC. As opções em negrito são editáveis.',
+   codes:[
+    {label:'1. Criar usuário SGP no Huawei',code:`aaa
+local-user USUARIO password irreversible-cipher SENHA
+local-user USUARIO service-type ssh
+local-user USUARIO level 3`},
+    {label:'1.1 RADIUS Server-Group',code:`radius-server group sgp_PROVEDOR
+radius-server shared-key-cipher sgpradius@PROVEDOR
+radius-server authentication IP_SGP source ip-address IP_HUAWEI PORT_AUT weight 0
+radius-server accounting IP_SGP source ip-address IP_HUAWEI PORT_ACC weight 0
+comm
+radius-server user-name original
+comm
+radius-server type standard
+comm
+radius-server source interface LoopBack0
+comm
+radius-server traffic-unit byte
+radius-attribute case-sensitive qos-profile-name
+comm
+radius-server format-attribute nas-port-id vendor redback-simple
+comm
+radius-server attribute disable Cisco-AVpair receive
+quit`},
+    {label:'1.1a IPv6 (se usar)',code:`radius-server authentication IPV6_SGP PORT_AUT weight 0
+radius-server accounting IPV6_SGP PORT_ACC weight 0
+# Ex:
+radius-server authentication 2804:7438:5:c1:45:178:142:32 2021 weight 0
+radius-server accounting 2804:7438:5:c1:45:178:142:32 2022 weight 0`},
+    {label:'1.2 Se usar IPv6 (acrescentar no group)',code:`radius-attribute assign hw-mng-ipv6 pppoe motm
+radius-attribute apply framed-ipv6-pool match pool-type`},
+    {label:'1.3 Se tiver IPoE (acrescentar)',code:`radius-attribute apply user-name match user-type ipoe
+radius-attribute service-type value outbound user-type ipoe
+radius-attribute apply framed-ipv6-pool match pool-type`},
+    {label:'2. Disconnect — porta 3799',code:`radius-server authorization IP_SGP destination-port 3799 server-group sgp_PROVEDOR shared-key sgpradius@PROVEDOR
+radius local-ip all
+comm`},
+    {label:'3. Authentication e Accounting',code:`aaa
+authentication-scheme aut_PROVEDOR
+ authentication-mode radius local
+ commit
+ quit
+accounting-scheme acc_PROVEDOR
+ accounting interim interval 5
+ accounting send-update
+ commit
+ quit`},
+    {label:'4. Domain principal (banda dinâmica)',code:`aaa
+domain sgp_PROVEDOR
+ authentication-scheme aut_PROVEDOR
+ accounting-scheme acc_PROVEDOR
+ radius-server group sgp_PROVEDOR
+ commit
+ qos rate-limit-mode car inbound
+ commit
+ qos rate-limit-mode car outbound
+ commit
+ user-basic-service-ip-type ipv4
+ commit
+ quit`},
+    {label:'4.2 Domain (controle QoS manual)',code:`aaa
+domain sgp_PROVEDOR
+ authentication-scheme aut_PROVEDOR
+ accounting-scheme acc_PROVEDOR
+ radius-server group sgp_PROVEDOR
+ ip-pool nome_pool_ipv4
+ ipv6-pool nome_pool_ipv6
+ ipv6-pool prefix-delegate
+ commit
+ user-basic-service-ip-type ipv4
+ commit
+ quit`},
+    {label:'4. Domain bloqueio',code:`aaa
+domain bloqueados_PROVEDOR
+ authentication-scheme aut_PROVEDOR
+ accounting-scheme acc_PROVEDOR
+ radius-server group sgp_PROVEDOR
+ commit
+ ip-pool bloqueio
+ commit
+ ipv6-pool bloqueiov6prefix
+ commit
+ ipv6-pool bloqueiov6pd
+ commit
+ dns primary-ip 8.8.8.8
+ dns second-ip 8.8.4.4
+ commit
+ dns primary-ipv6 2001:4860:4860::8888
+ commit
+ dns second-ipv6 2001:4860:4860::8844
+ commit
+ quit`},
+    {label:'5. Virtual-Template',code:`interface Virtual-Template1
+ ppp authentication-mode chap pap
+ comm
+ ppp keepalive interval 30 retransmit 3 datacheck
+ comm
+ undo ip urpf strict enable
+ comm
+ quit`},
+    {label:'6. SNMP',code:`snmp-agent community read cipher SGP-GRAPHICs
+snmp-agent sys-info version v2c
+commit`},
+    {label:'7. Verificar e acertar hora',code:`display clock
+# Fora de sys:
+clock timezone America/Recife minus 03:00:00
+clock datetime HH:MM:SS YYYY-MM-DD`},
+    {label:'9. Pools de bloqueio IPv6',code:`ip pool bloqueio bas local
+ gateway 10.24.0.1 255.255.252.0
+ commit
+ section 0 10.24.0.2 10.24.3.254
+ commit
+ quit
+
+ipv6 prefix bloqueiov6prefix local
+ prefix 2001:DC8:100::/40
+ commit
+ quit
+ipv6 prefix bloqueiov6pd delegation
+ prefix 2001:DB8:900::/40 delegating-prefix-length 56
+ commit
+ quit
+ipv6 pool bloqueiov6prefix bas local
+ dns-server 2001:4860:4860::8888
+ commit
+ prefix bloqueiov6prefix
+ commit
+ quit
+ipv6 pool bloqueiov6pd bas delegation
+ dns-server 2001:4860:4860::8888
+ commit
+ prefix bloqueiov6pd
+ commit
+ quit`},
+    {label:'11. Testar RADIUS',code:'test-aaa testesgp sgp12321 radius-group sgp_PROVEDOR'},
+    {label:'Testar comunidade SNMP (do servidor SGP)',code:'snmpwalk -c SGP-GRAPHICs -v 2c IP_NAS'}
+  ]},
+
+  {id:71,cat:'conc',tag:'info',title:'Huawei — Variáveis Obrigatórias e Opcionais no SGP',
+   codes:[{label:'variáveis',code:`# OBRIGATÓRIAS
+HUAWEI_POOL_ENABLE      → 1
+BLOQUEIO_HUAWEI_DOMAIN  → bloqueados_PROVEDOR
+
+# CONTROLE DE BANDA DINÂMICO (radius)
+HUAWEI_RATE             → 1
+
+# CONTROLE DE BANDA QoS (profile fixo)
+HUAWEI_PROFILE          → 1
+
+# IPv6
+BLOQUEIO_V6_PREFIX      → bloqueiov6prefix
+BLOQUEIO_V6_PD          → bloqueiov6pd
+
+# DNS via RADIUS
+HUAWEI_DNS1             → 8.8.8.8
+HUAWEI_DNS2             → 8.8.4.4`}]},
+
+  {id:72,cat:'conc',tag:'alert',title:'Erro de Desconexão — Huawei / Cisco (porta 3799)',
+   desc:'Checklist completo quando o cliente desconecta no SGP mas aparece "Sem Resposta".',
+   codes:[
+    {label:'1. Verificar IP do NAS no SGP',code:`# O IP no cadastro do NAS no SGP deve existir fisicamente no equipamento (não redirecionamento)
+# Ou configurar Túnel GRE`},
+    {label:'2. Rever comando 3799 — Huawei',code:`radius-server authorization IP_SGP destination-port 3799 server-group sgp_PROVEDOR shared-key sgpradius@PROVEDOR
+radius local-ip all
+commit`},
+    {label:'3. Se SGP tiver 2 IPs — criar 2 comandos de authorization',code:`# Exemplo: IP Local 10.150.240.2 + IP externo 45.187.68.19
+radius-server authorization 10.150.240.2 destination-port 3799 shared-key-cipher sgpradius@PROVEDOR server-group sgp_PROVEDOR
+radius-server authorization 45.187.68.19 destination-port 3799 shared-key-cipher sgpradius@PROVEDOR server-group sgp_PROVEDOR`},
+    {label:'4. Regras no Mikrotik (NAT do NAS) — não fazer NAT para o RADIUS',code:`:global IP_SGP "x.x.x.x"
+:global IP_NAS "x.x.x.x"
+:global AUC "xx12"
+:global ACC "xx13"
+
+/ip firewall nat
+add action=accept chain=srcnat comment="NAO FAZER NAT PARA O IP DO RADIUS" dst-address=$IP_SGP protocol=udp
+add action=accept chain=srcnat comment="NAO FAZER NAT PARA O IP DO RADIUS" dst-address=$IP_NAS dst-port=$AUC-$ACC,3799 protocol=udp src-address=$IP_SGP
+add action=accept chain=srcnat comment="NAO FAZER NAT PARA O IP DO RADIUS" dst-address=$IP_SGP dst-port=$AUC-$ACC,3799 protocol=udp src-address=$IP_NAS`},
+    {label:'5. Corrigir Acct-Session-ID (Huawei — caracteres errados no tcpdump)',code:`aaa
+acct-session-id-version version3`},
+    {label:'Verificar se comnado aaa new-model está ativo (Cisco)',code:'conf t\naaa new-model\nend\nwr'}
+  ]},
+
+  // ─── COLETA GRAFICOS ────────────────────────────────────────
+  {id:73,cat:'snmp',tag:'script',title:'Coleta de Gráficos Huawei — queries.conf',
+   desc:'Substitui o queries.conf pelo huawei para exibir tráfego em tempo real mais rápido (5~7s). Verificar se usa "ignorar domain" antes de aplicar.',
+   codes:[
+    {label:'SGP LOCAL — sem ignorar domain',code:`cp /usr/local/radius3/etc/raddb_sgp/mods-config/sql/main/postgresql/queries.conf /usr/local/radius3/etc/raddb_sgp/mods-config/sql/main/postgresql/queries.conf-bak
+
+cp /usr/local/sgp/doc/install/radius3/raddb_3017/mods-config/sql/main/postgresql/queries.conf-huawei /usr/local/radius3/etc/raddb_sgp/mods-config/sql/main/postgresql/queries.conf`},
+    {label:'SGP NUVEM — sem ignorar domain',code:`cp /usr/local/radius3/etc/raddb_PROVEDOX/mods-config/sql/main/postgresql/queries.conf /usr/local/radius3/etc/raddb_PROVEDOX/mods-config/sql/main/postgresql/queries.conf-bak
+
+cp /usr/local/sgp/doc/install/radius3/raddb_3017/mods-config/sql/main/postgresql/queries.conf-huawei /usr/local/radius3/etc/raddb_PROVEDOX/mods-config/sql/main/postgresql/queries.conf`},
+    {label:'SGP LOCAL — COM ignorar domain',code:`cp /usr/local/radius3/etc/raddb_sgp/mods-config/sql/main/postgresql/queries.conf /usr/local/radius3/etc/raddb_sgp/mods-config/sql/main/postgresql/queries.conf-bak
+
+cp /usr/local/sgp/doc/install/radius3/raddb_3017/mods-config/sql/main/postgresql/queries.conf-ignoredomain-huawei /usr/local/radius3/etc/raddb_sgp/mods-config/sql/main/postgresql/queries.conf`},
+    {label:'reiniciar RADIUS após trocar arquivo',code:`systemctl restart radiusd_sgp.service
+# ou
+systemctl restart radiusd_PERFIL.service`},
+    {label:'confirmar SNMP após reiniciar',code:'snmpwalk -c SGP-GRAPHICs -v 2c IP_DO_NAS'}
+  ]},
+
+  {id:74,cat:'snmp',tag:'alert',title:'Coleta SNMP — TIMEOUT / lentidão',
+   desc:'Se snmpwalk apresentar timeout, usar snmpbulkwalk. Setar no campo JSON do NAS no SGP.',
+   codes:[
+    {label:'JSON no NAS (SGP)',code:'{\n "usebulkwalk": 1\n}'},
+    {label:'testar',code:'snmpbulkwalk -v2c -c SGP-GRAPHICs IP_NAS'},
+    {label:'fix easysnmp (se falhar após atualização)',code:`pip uninstall easysnmp git+https://github.com/jraylan/easysnmp.git -y
+pip install easysnmp`},
+    {label:'fix completo com RRD',code:`PERFIL=nome_provedor
+pip uninstall easysnmp -y
+pip install easysnmp
+chown -R www-data:www-data /usr/local/sgp/media/$PERFIL/
+chmod -R 777 /usr/local/sgp/media/$PERFIL/
+cd /usr/local/sgp/media/$PERFIL/rrd/
+for i in $(ls *@*); do
+  j=$(echo $i | cut -d '@' -f 1).rrd
+  mv $j $j.bak
+  mv $i $j
+done
+python /usr/local/sgp/sgp/$PERFIL/manage.py rrdinfo`},
+    {label:'fix Port ID formato errado (Huawei)',code:`# Correto:   Port ID: 0/1 vlanid 100 pppoe 53501
+# Incorreto: slot=0;subslot=2;port=1;vlanid=100;
+# Solução no Huawei:
+radius-server format-attribute nas-port-id vendor redback-simple`},
+    {label:'fix snmp IPv6 (se NAS integrado por IPv6)',code:'{\n"snmp_host_addr": "10.0.0.100"\n}'}
+  ]},
+];
+
+// ─── STATE ────────────────────────────────────────────────────────
+const SK = 'manual_tsmx_v2';
+const SD = 'manual_tsmx_date';
+let editMode = false, currentCat = 'all', currentQuery = '', editingId = null;
+
+function loadData(){ try{ const r=localStorage.getItem(SK); if(r) return JSON.parse(r); }catch(e){} return JSON.parse(JSON.stringify(DEFAULT_DATA)); }
+function persist(d){ localStorage.setItem(SK,JSON.stringify(d)); const n=new Date(); const s=n.toLocaleDateString('pt-BR')+' '+n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); localStorage.setItem(SD,s); document.getElementById('s-date').textContent=s; }
+
+let data = loadData();
+let nextId = Math.max(0,...data.map(d=>d.id)) + 1;
+
+// ─── UTILS ────────────────────────────────────────────────────────
+// ─── CATEGORY SYSTEM ─────────────────────────────────────────────
+const SC = 'manual_tsmx_cats';
+const DEFAULT_CATS = [
+  {key:'vpn',   icon:'🔐', label:'VPN & Rotas'},
+  {key:'olt',   icon:'📡', label:'OLT & ONU'},
+  {key:'conc',  icon:'🔀', label:'Concentradores'},
+  {key:'radius',icon:'📶', label:'RADIUS'},
+  {key:'server',icon:'🖥', label:'Servidor Linux'},
+  {key:'cgnat', icon:'🌐', label:'CGNAT'},
+  {key:'ssl',   icon:'🔒', label:'SSL / Certificado'},
+  {key:'script',icon:'🐍', label:'Scripts Django'},
+  {key:'gre',   icon:'🔗', label:'Túnel GRE'},
+  {key:'snmp',  icon:'📊', label:'Gráficos / SNMP'},
+  {key:'ssh',   icon:'💻', label:'SSH / Erros'},
+  {key:'misc',  icon:'⚙️', label:'Misc / Outros'},
+];
+let customCats = [];
+function loadCats(){ try{ const r=localStorage.getItem(SC); if(r) customCats=JSON.parse(r); }catch(e){ customCats=[]; } }
+function saveCats(){ localStorage.setItem(SC,JSON.stringify(customCats)); }
+function allCats(){ return [...DEFAULT_CATS,...customCats]; }
+function getCatLabel(key){ const c=allCats().find(c=>c.key===key); return c?c.label:key; }
+function getCatIcon(key){ const c=allCats().find(c=>c.key===key); return c?c.icon:'📁'; }
+function getCatOrder(){ return allCats().map(c=>c.key); }
+function getCatLabelMap(){ const m={all:'Todos os Tópicos'}; allCats().forEach(c=>m[c.key]=c.label); return m; }
+const CAT_LABEL = new Proxy({}, { get:(t,k)=>{ if(k==='all') return 'Todos os Tópicos'; const c=allCats().find(c=>c.key===k); return c?c.label:k; } });
+function getCatOrder_arr(){ return allCats().map(c=>c.key); }
+
+// ─── NAV RENDER ───────────────────────────────────────────────────
+function renderNav(){
+  const nav = document.getElementById('nav');
+  const cats = allCats();
+  let html = `<div class="nav-item${currentCat==='all'?' active':''}" data-cat="all" onclick="filterCat(this,'all')">🗂 Todos <span class="nav-count" id="cnt-all">${data.length}</span></div>`;
+  cats.forEach(c=>{
+    const cnt = data.filter(i=>i.cat===c.key).length;
+    const active = currentCat===c.key?' active':'';
+    html += `<div class="nav-item${active}" data-cat="${c.key}" onclick="filterCat(this,'${c.key}')">${c.icon} ${c.label} <span class="nav-count" id="cnt-${c.key}">${cnt}</span></div>`;
+  });
+  nav.innerHTML = html;
+  document.getElementById('s-cats').textContent = cats.length;
+}
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function hl(t,q){ if(!q) return esc(t); return esc(t).replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<span class="highlight">$1</span>'); }
+function tagHtml(t){ const m={cmd:'CMD',script:'SCRIPT',link:'LINK',info:'INFO',alert:'ATENÇÃO'}; return '<span class="card-tag tag-'+(t||'info')+'">'+(m[t]||t)+'</span>'; }
+
+// ─── RENDER ───────────────────────────────────────────────────────
+function renderCards(items, q){
+  const cont = document.getElementById('cards-container');
+  if(!items.length){ cont.innerHTML=''; document.getElementById('no-results').style.display='block'; document.getElementById('no-q').textContent=q||''; updateCount(0); return; }
+  document.getElementById('no-results').style.display='none';
+  let grouped={};
+  items.forEach(item=>{ const g=currentCat==='all'?item.cat:'_'; if(!grouped[g]) grouped[g]=[]; grouped[g].push(item); });
+  const order = currentCat==='all' ? getCatOrder_arr() : ['_'];
+  let html='';
+  order.forEach(g=>{
+    if(!grouped[g]||!grouped[g].length) return;
+    const title = currentCat==='all' ? getCatLabel(g) : getCatLabel(currentCat)||'';
+    if(title) html+=`<div class="section-title">${title}</div>`;
+    if(g==='cgnat'||currentCat==='cgnat') html+=calcCardHtml();
+    if(g==='ssl'||currentCat==='ssl') html+=sslToolHtml();
+    html+='<div class="cards-grid">';
+    grouped[g].forEach(item=>{
+      const bid='b'+item.id;
+      let body='';
+      if(item.desc) body+=`<p>${hl(item.desc,q)}</p>`;
+      if(item.codes) item.codes.forEach((c,i)=>{ const uid='p'+item.id+'_'+i; body+=`<div class="code-block"><div class="code-header"><span class="code-label">${esc(c.label||'bash')}</span><button class="copy-btn" onclick="cp('${uid}')">copiar</button></div><pre id="${uid}">${esc(c.code)}</pre></div>`; });
+      if(item.links) item.links.forEach(l=>{ body+=`<p style="margin-top:8px"><a class="ext-link" href="${esc(l)}" target="_blank">↗ ${esc(l.replace('https://',''))}</a></p>`; });
+      const hasBody=!!body;
+      html+=`<div class="card" data-id="${item.id}">
+        <div class="card-header">
+          <div class="card-header-left" onclick="${hasBody?`tog('${bid}',this.closest('.card-header'))`:''}">${tagHtml(item.tag)}<span class="card-title">${hl(item.title,q)}</span></div>
+          <div class="card-actions" style="display:${editMode?'flex':'none'}">
+            <button class="ebt ebt-edit" onclick="openModal(${item.id})">✏ editar</button>
+            <button class="ebt ebt-del" onclick="del(${item.id})">✕</button>
+          </div>
+          ${hasBody?`<span class="card-toggle">›</span>`:''}
+        </div>
+        ${hasBody?`<div class="card-body" id="${bid}">${body}</div>`:''}
+      </div>`;
+    });
+    html+='</div>';
+  });
+  cont.innerHTML=html;
+  updateCount(items.length);
+}
+
+function tog(bid,hdr){ const b=document.getElementById(bid); if(!b) return; const t=hdr.querySelector('.card-toggle'); if(b.classList.contains('open')){ b.classList.remove('open'); if(t) t.style.transform=''; } else { b.classList.add('open'); if(t) t.style.transform='rotate(90deg)'; } }
+function cp(id){ const el=document.getElementById(id); navigator.clipboard.writeText(el.textContent).then(()=>{ const btn=el.previousElementSibling.querySelector('.copy-btn'); btn.textContent='✓'; btn.classList.add('copied'); setTimeout(()=>{ btn.textContent='copiar'; btn.classList.remove('copied'); },1500); }); }
+function filterCat(el,cat){ document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); el.classList.add('active'); currentCat=cat; document.getElementById('page-title').textContent=cat==='all'?'Todos os Tópicos':getCatLabel(cat); applyFilters(); }
+function applyFilters(){ let items=data; if(currentCat!=='all') items=items.filter(i=>i.cat===currentCat); if(currentQuery){ const q=currentQuery.toLowerCase(); items=items.filter(i=>i.title.toLowerCase().includes(q)||(i.desc&&i.desc.toLowerCase().includes(q))||(i.codes&&i.codes.some(c=>c.code.toLowerCase().includes(q)||c.label.toLowerCase().includes(q)))); } renderCards(items,currentQuery); }
+function updateCount(n){ document.getElementById('result-count').textContent=n+' tópico'+(n!==1?'s':''); document.getElementById('s-total').textContent=n; }
+function buildCounts(){ renderNav(); }
+
+
+// ─── CGNAT CALCULATOR ────────────────────────────────────────────
+function calcCardHtml(){
+  return `<div class="calc-card" id="cgnat-calc">
+    <div class="calc-card-header">
+      <span class="calc-tag">FERRAMENTA</span>
+      <span>🧮 CGNAT → Formato SGP</span>
+    </div>
+    <div style="display:flex;border-bottom:1px solid var(--border)">
+      <button class="cc-tab active" id="cc-tab1" onclick="ccTab(1)" style="flex:1;padding:9px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;background:rgba(0,212,170,.06);border:none;border-right:1px solid var(--border);color:var(--accent);cursor:pointer;transition:all .15s">⚙ CALCULADORA MANUAL</button>
+      <button class="cc-tab" id="cc-tab2" onclick="ccTab(2)" style="flex:1;padding:9px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;background:none;border:none;color:var(--muted);cursor:pointer;transition:all .15s">📋 COLAR REGRAS DO CONCENTRADOR</button>
+    </div>
+
+    <!-- TAB 1: MANUAL CALC -->
+    <div class="calc-body" id="cc-panel1">
+      <div class="calc-grid">
+        <div class="calc-field">
+          <label class="calc-label">Tipo</label>
+          <select class="calc-select" id="cc-tipo">
+            <option value="VERTICAL">VERTICAL</option>
+            <option value="HORIZONTAL">HORIZONTAL</option>
+            <option value="FULL">FULL</option>
+          </select>
+        </div>
+        <div class="calc-field">
+          <label class="calc-label">IP/Rede Saída — público</label>
+          <input type="text" class="calc-input" id="cc-pub" placeholder="200.155.147.16/29">
+        </div>
+        <div class="calc-field">
+          <label class="calc-label">NAT Rede — privado</label>
+          <input type="text" class="calc-input" id="cc-priv" placeholder="100.127.252.0/22">
+        </div>
+        <div class="calc-field">
+          <label class="calc-label">Porta Inicial</label>
+          <input type="number" class="calc-input" id="cc-pini" value="1025" min="1" max="65535">
+        </div>
+        <div class="calc-field">
+          <label class="calc-label">Porta Final</label>
+          <input type="number" class="calc-input" id="cc-pfim" value="65535" min="1" max="65535">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="calc-btn" onclick="calcCGNAT()">⚡ Gerar cadastro SGP</button>
+        <button class="calc-btn" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)" onclick="clearCalc()">✕ Limpar</button>
+      </div>
+      <div class="calc-error" id="cc-err"></div>
+      <div class="calc-info-row" id="cc-info"></div>
+      <div class="calc-result" id="cc-result">
+        <div class="calc-result-header">
+          <span class="calc-result-label">✓ Pronto para cadastro no SGP</span>
+          <button class="calc-copy" onclick="copySGP('cc-out')">copiar</button>
+        </div>
+        <pre id="cc-out"></pre>
+      </div>
+    </div>
+
+    <!-- TAB 2: RULE PARSER -->
+    <div class="calc-body" id="cc-panel2" style="display:none">
+      <div class="calc-field">
+        <label class="calc-label">Cole as regras do concentrador aqui</label>
+        <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:6px;line-height:1.7">
+          Formatos suportados: Mikrotik NETMAP export · Script Python (array) · Cisco NAT pool · Texto livre (cidr_pub cidr_priv porta_ini porta_fim)<br>
+          Cole uma ou várias regras — cada linha/bloco vira um cadastro separado.
+        </div>
+        <textarea class="calc-input" id="cc-raw" rows="8" style="resize:vertical;min-height:130px;line-height:1.6;font-size:11.5px" placeholder="Exemplos aceitos:
+
+# Mikrotik NETMAP:
+add action=netmap chain=srcnat src-address=100.127.252.0/22 to-addresses=200.155.147.16/29
+
+# Script Python (array):
+[\'200.155.147.16/29\', \'100.127.252.0/22\', \'63522\', \'1007\']
+
+# Cisco NAT pool:
+ip nat pool CGNAT 200.155.147.17 200.155.147.22 prefix-length 29
+
+# Texto livre:
+200.155.147.16/29 100.127.252.0/22 1025 65535"></textarea>
+      </div>
+      <div class="calc-grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">
+        <div class="calc-field">
+          <label class="calc-label">Tipo padrão</label>
+          <select class="calc-select" id="cc-rtipo">
+            <option value="VERTICAL">VERTICAL</option>
+            <option value="HORIZONTAL">HORIZONTAL</option>
+            <option value="FULL">FULL</option>
+          </select>
+        </div>
+        <div class="calc-field">
+          <label class="calc-label">Porta ini (fallback)</label>
+          <input type="number" class="calc-input" id="cc-rpini" value="1025" min="1" max="65535">
+        </div>
+        <div class="calc-field">
+          <label class="calc-label">Porta fim (fallback)</label>
+          <input type="number" class="calc-input" id="cc-rpfim" value="65535" min="1" max="65535">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="calc-btn" onclick="parseRules()">🔍 Converter Regras</button>
+        <button class="calc-btn" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)" onclick="document.getElementById('cc-raw').value='';document.getElementById('cc-rout').innerHTML='';document.getElementById('cc-rerr').className='calc-error'">✕ Limpar</button>
+      </div>
+      <div class="calc-error" id="cc-rerr"></div>
+      <div id="cc-rout"></div>
+    </div>
+  </div>`;
+}
+
+function ccTab(n){
+  document.getElementById('cc-panel1').style.display = n===1?'flex':'none';
+  document.getElementById('cc-panel2').style.display = n===2?'flex':'none';
+  document.getElementById('cc-tab1').style.cssText = n===1
+    ? 'flex:1;padding:9px;font-size:11px;font-family:JetBrains Mono,monospace;font-weight:700;background:rgba(0,212,170,.06);border:none;border-right:1px solid var(--border);color:var(--accent);cursor:pointer'
+    : 'flex:1;padding:9px;font-size:11px;font-family:JetBrains Mono,monospace;font-weight:700;background:none;border:none;border-right:1px solid var(--border);color:var(--muted);cursor:pointer';
+  document.getElementById('cc-tab2').style.cssText = n===2
+    ? 'flex:1;padding:9px;font-size:11px;font-family:JetBrains Mono,monospace;font-weight:700;background:rgba(0,212,170,.06);border:none;color:var(--accent);cursor:pointer'
+    : 'flex:1;padding:9px;font-size:11px;font-family:JetBrains Mono,monospace;font-weight:700;background:none;border:none;color:var(--muted);cursor:pointer';
+}
+
+// ─── RULE PARSER ─────────────────────────────────────────────────
+function isPrivate(ip){
+  const p=ip.split('.').map(Number);
+  if(p[0]===10) return true;
+  if(p[0]===172&&p[1]>=16&&p[1]<=31) return true;
+  if(p[0]===192&&p[1]===168) return true;
+  if(p[0]===100&&p[1]>=64&&p[1]<=127) return true;
+  return false;
+}
+
+function parseRules(){
+  const raw   = document.getElementById('cc-raw').value.trim();
+  const tipo  = document.getElementById('cc-rtipo').value;
+  const dfIni = parseInt(document.getElementById('cc-rpini').value)||1025;
+  const dfFim = parseInt(document.getElementById('cc-rpfim').value)||65535;
+  const errEl = document.getElementById('cc-rerr');
+  const outEl = document.getElementById('cc-rout');
+  errEl.className='calc-error'; outEl.innerHTML='';
+
+  if(!raw){ errEl.textContent='⚠ Cole as regras do concentrador no campo acima.'; errEl.className='calc-error show'; return; }
+
+  const results = [];
+  const errors  = [];
+
+  // Try each line/block as a rule
+  // Strategy: parse by known formats, then fall back to CIDR extraction
+  const lines = raw.split('\n').map(l=>l.trim()).filter(l=>l&&!l.startsWith('#'));
+
+  // Merge continuation lines (lines not starting with 'add'/'ip nat'/'[' might be part of prev)
+  const blocks = [];
+  let cur = '';
+  for(const l of lines){
+    if(!cur){ cur=l; continue; }
+    // If line looks like start of a new rule, push current
+    if(/^(add |\/ip |ip nat|ip firewall|\[['"]?\d)/i.test(l)||/^\[['"]?(\d+\.){3}\d+/.test(l)){
+      if(cur) blocks.push(cur);
+      cur=l;
+    } else {
+      cur += ' ' + l;
+    }
+  }
+  if(cur) blocks.push(cur);
+
+  for(const block of blocks){
+    if(!block.trim()) continue;
+    let pub=null, priv=null, pIni=dfIni, pFim=dfFim;
+
+    // ── FORMAT 1: Mikrotik NETMAP ──────────────────────────────
+    // src-address=X/Y to-addresses=X/Y  (src=private, to=public)
+    if(/netmap/i.test(block)||/src-address=/i.test(block)){
+      const srcM = block.match(/src-address=([\d.]+\/\d+)/i);
+      const toM  = block.match(/to-addresses=([\d.]+\/\d+)/i);
+      if(srcM) priv = srcM[1];
+      if(toM)  pub  = toM[1];
+      // port range: dst-port=1025-65535
+      const portM = block.match(/dst-port=(\d+)-(\d+)/i);
+      if(portM){ pIni=parseInt(portM[1]); pFim=parseInt(portM[2]); }
+      // If no prefix on to-addresses, might be a single IP → treat as /32
+      if(pub&&!pub.includes('/')) pub+='/32';
+      if(priv&&!priv.includes('/')) priv+='/32';
+    }
+
+    // ── FORMAT 2: Python array ─────────────────────────────────
+    // ['pub/pref', 'priv/pref', port_start, ports_count]  OR
+    // ['pub/pref', 'priv/pref', port_start, port_end]
+    else if(/\[/.test(block)&&/\d+\.\d+\.\d+\.\d+/.test(block)){
+      const cidrs = [...block.matchAll(/([\d.]+\/\d+)/g)].map(m=>m[1]);
+      const nums  = [...block.matchAll(/,\s*['"']?(\d+)['"']?/g)].map(m=>parseInt(m[1])).filter(n=>!isNaN(n));
+      if(cidrs.length>=2){
+        // Determine which is public/private
+        if(isPrivate(cidrs[0].split('/')[0])){ priv=cidrs[0]; pub=cidrs[1]; }
+        else { pub=cidrs[0]; priv=cidrs[1]; }
+      }
+      if(nums.length>=2){
+        const n0=nums[0], n1=nums[1];
+        // If n1 looks like a port end (>n0 and reasonable) use as range
+        if(n1>n0&&n1<=65535&&n0>=1){ pIni=n0; pFim=n1; }
+        // If n1 looks like a count (small relative to n0), compute end
+        else if(n0>1024&&n1>0&&n1<10000){ pIni=n0; pFim=Math.min(n0+n1-1,65535); }
+      }
+    }
+
+    // ── FORMAT 3: Cisco NAT pool ───────────────────────────────
+    // ip nat pool NAME start_ip end_ip prefix-length X
+    else if(/ip nat pool/i.test(block)){
+      const poolM = block.match(/ip nat pool\s+\S+\s+([\d.]+)\s+([\d.]+)\s+prefix-length\s+(\d+)/i);
+      if(poolM){
+        pub = poolM[1]+'/'+poolM[3];
+      }
+      // Look for private source in same block or next
+      const privM = block.match(/source\s+(?:list\s+\S+\s+)?(?:static\s+)?([\d.]+\/\d+)/i);
+      if(privM) priv = privM[1];
+    }
+
+    // ── FORMAT 4: Huawei NAT ───────────────────────────────────
+    // nat address-group NAME start-address end-address
+    else if(/nat address-group/i.test(block)){
+      const hM = block.match(/([\d.]+)\s+([\d.]+)/);
+      if(hM){ pub = hM[1]+'/32'; } // Will refine below
+    }
+
+    // ── FORMAT 5: Free text / fallback ────────────────────────
+    // Extract all CIDRs and classify by IP range
+    if(!pub||!priv){
+      const allCidrs = [...block.matchAll(/([\d.]+\/\d+)/g)].map(m=>m[1]);
+      // port range: look for patterns like 1025-65535 or 1025 65535
+      const portRangeM = block.match(/(\d{1,5})\s*[-–]\s*(\d{5})/);
+      if(portRangeM){ pIni=parseInt(portRangeM[1]); pFim=parseInt(portRangeM[2]); }
+
+      for(const cidr of allCidrs){
+        const ip = cidr.split('/')[0];
+        if(isPrivate(ip)){ if(!priv) priv=cidr; }
+        else { if(!pub) pub=cidr; }
+      }
+
+      // If both still unassigned but we have 2 CIDRs, infer by prefix size
+      if(!pub&&!priv&&allCidrs.length>=2){
+        const p0=parseInt(allCidrs[0].split('/')[1]||0);
+        const p1=parseInt(allCidrs[1].split('/')[1]||0);
+        // smaller prefix = more IPs = likely public pool? No, private is bigger
+        // larger count = private; smaller count = public
+        if(p0<p1){ pub=allCidrs[0]; priv=allCidrs[1]; }
+        else { pub=allCidrs[1]; priv=allCidrs[0]; }
+      }
+    }
+
+    if(!pub&&!priv){
+      errors.push('Linha não reconhecida: "'+block.slice(0,80)+'"');
+      continue;
+    }
+    if(!pub)  { errors.push('Não foi possível identificar a rede pública em: "'+block.slice(0,60)+'"'); continue; }
+    if(!priv) { errors.push('Não foi possível identificar a rede privada em: "'+block.slice(0,60)+'"'); continue; }
+
+    const pubP  = parseCIDR(pub);
+    const privP = parseCIDR(priv);
+    if(!pubP)  { errors.push('CIDR público inválido: '+pub); continue; }
+    if(!privP) { errors.push('CIDR privado inválido: '+priv); continue; }
+
+    const ratio     = privP.count / pubP.count;
+    const totalPorts= pFim - pIni + 1;
+    const portasIP  = ratio > 0 ? Math.round(totalPorts / ratio) : totalPorts;
+
+    results.push({ tipo, pub: pubP.cidr, priv: privP.cidr, pIni, pFim, portasIP,
+      pubCount: pubP.count, privCount: privP.count });
+  }
+
+  // Render errors
+  if(errors.length){
+    errEl.innerHTML = '⚠ '+errors.join('<br>⚠ ');
+    errEl.className = 'calc-error show';
+  }
+
+  if(!results.length && !errors.length){
+    errEl.textContent = '⚠ Nenhuma regra reconhecida. Verifique o formato colado.';
+    errEl.className = 'calc-error show'; return;
+  }
+
+  // ── Verificar consistência de Portas por IP ──────────────────────
+  const allPortasIP = results.map(r=>r.portasIP);
+  const uniquePortas = [...new Set(allPortasIP)];
+  const modePortas = uniquePortas.sort((a,b)=>
+    allPortasIP.filter(v=>v===b).length - allPortasIP.filter(v=>v===a).length
+  )[0];
+  const hasInconsistency = uniquePortas.length > 1;
+
+  // Render results
+  let html = '';
+
+  // Banner de inconsistência
+  if(hasInconsistency){
+    const grupos = {};
+    results.forEach((r,i)=>{ if(!grupos[r.portasIP]) grupos[r.portasIP]=[]; grupos[r.portasIP].push(i+1); });
+    const detalhe = Object.entries(grupos)
+      .sort((a,b)=>b[1].length-a[1].length)
+      .map(([p,idxs])=>`<strong style="color:var(--yellow)">${p} portas/IP</strong> → Regra(s) ${idxs.join(', ')}`)
+      .join('<br>');
+    html += `<div style="background:rgba(227,179,65,.08);border:1px solid rgba(227,179,65,.35);border-radius:8px;padding:12px 16px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="color:var(--yellow);font-size:15px">⚠</span>
+        <span style="font-size:12px;font-weight:800;color:var(--yellow);text-transform:uppercase;letter-spacing:.06em">Portas por IP inconsistentes entre as regras</span>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--muted);line-height:1.8">${detalhe}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;font-family:'JetBrains Mono',monospace">
+        Valor mais comum: <strong style="color:var(--accent)">${modePortas} portas/IP</strong> — verifique se as redes e portas estão corretas nas regras divergentes.
+      </div>
+    </div>`;
+  }
+
+  results.forEach((r,i)=>{
+    const out = `=== Informações para cadastro no SGP ===\nTipo: ${r.tipo}\nIP/Rede Saída (público): ${r.pub}\nNAT Rede (privado): ${r.priv}\nPorta inicial: ${r.pIni}\nPorta final: ${r.pFim}\nPortas por IP : ${r.portasIP}`;
+    const pid = 'rout_'+i;
+    const diverge = hasInconsistency && r.portasIP !== modePortas;
+    const borderColor = diverge ? 'rgba(247,129,102,.5)' : 'var(--border)';
+    const statusIcon  = diverge ? '⚠' : '✓';
+    const statusColor = diverge ? 'var(--accent2)' : 'var(--green)';
+    const statusText  = diverge
+      ? `<span style="color:var(--accent2);font-weight:700">⚠ ${r.portasIP} portas/IP — DIFERE do padrão (${modePortas})</span>`
+      : `${r.portasIP} portas/IP`;
+    html += `<div class="calc-result show" style="margin-bottom:10px;border-color:${borderColor}">
+      <div class="calc-result-header" style="${diverge?'background:rgba(247,129,102,.06)':''}">
+        <span class="calc-result-label" style="color:${statusColor};display:flex;flex-direction:column;gap:2px">
+          <span>${statusIcon} Regra ${i+1} — ${r.pub} → ${r.priv}</span>
+          <span style="font-size:10px;font-weight:400;color:var(--muted)">${r.pubCount} IPs públicos · ${r.privCount} IPs privados · ${statusText}</span>
+        </span>
+        <button class="calc-copy" onclick="copySGP('${pid}')">copiar</button>
+      </div>
+      <pre id="${pid}">${out}</pre>
+    </div>`;
+  });
+
+  if(results.length>1){
+    const allText = results.map(r=>`=== Informações para cadastro no SGP ===\nTipo: ${r.tipo}\nIP/Rede Saída (público): ${r.pub}\nNAT Rede (privado): ${r.priv}\nPorta inicial: ${r.pIni}\nPorta final: ${r.pFim}\nPortas por IP : ${r.portasIP}`).join('\n\n');
+    const copyAll = `<button class="calc-btn" style="font-size:11px;padding:5px 14px" onclick="navigator.clipboard.writeText(this.dataset.t).then(()=>{this.textContent='✓ copiado';setTimeout(()=>this.textContent='📋 Copiar tudo (${results.length} regras)',1500)})" data-t="${allText.replace(/"/g,'&quot;')}">📋 Copiar tudo (${results.length} regras)</button>`;
+    html = `<div style="display:flex;justify-content:flex-end;margin-bottom:8px">${copyAll}</div>` + html;
+  }
+
+  outEl.innerHTML = html;
+}
+
+
+function parseCIDR(cidr){
+  const [ip, prefix] = cidr.trim().split('/');
+  if(!prefix) return null;
+  const pfx = parseInt(prefix);
+  if(isNaN(pfx)||pfx<0||pfx>32) return null;
+  const parts = ip.split('.');
+  if(parts.length!==4) return null;
+  for(const p of parts){ const n=parseInt(p); if(isNaN(n)||n<0||n>255) return null; }
+  const count = Math.pow(2, 32-pfx);
+  return { ip, prefix: pfx, count, cidr: cidr.trim() };
+}
+
+function calcCGNAT(){
+  const errEl = document.getElementById('cc-err');
+  const resEl = document.getElementById('cc-result');
+  const infoEl = document.getElementById('cc-info');
+  errEl.className='calc-error'; resEl.className='calc-result'; infoEl.innerHTML='';
+
+  const tipo  = document.getElementById('cc-tipo').value;
+  const pubRaw = document.getElementById('cc-pub').value.trim();
+  const privRaw= document.getElementById('cc-priv').value.trim();
+  const pIni  = parseInt(document.getElementById('cc-pini').value);
+  const pFim  = parseInt(document.getElementById('cc-pfim').value);
+
+  const errors = [];
+  const pub  = parseCIDR(pubRaw);
+  const priv = parseCIDR(privRaw);
+
+  if(!pubRaw)  errors.push('Informe o IP/Rede Saída (público).');
+  else if(!pub) errors.push('IP/Rede Saída inválido. Use o formato: 200.155.147.16/29');
+
+  if(!privRaw) errors.push('Informe a NAT Rede (privado).');
+  else if(!priv) errors.push('NAT Rede inválida. Use o formato: 100.127.252.0/22');
+
+  if(isNaN(pIni)||pIni<1||pIni>65535) errors.push('Porta inicial inválida (1-65535).');
+  if(isNaN(pFim)||pFim<1||pFim>65535) errors.push('Porta final inválida (1-65535).');
+  if(!isNaN(pIni)&&!isNaN(pFim)&&pFim<=pIni) errors.push('Porta final deve ser maior que a porta inicial.');
+  if(pub&&priv&&priv.count<=pub.count) errors.push('A rede privada precisa ter mais IPs que a rede pública (ex: /22 privado com /29 público).');
+
+  if(errors.length){
+    errEl.innerHTML='⚠ '+errors.join('<br>⚠ ');
+    errEl.className='calc-error show'; return;
+  }
+
+  const ratio      = priv.count / pub.count;
+  const totalPorts = pFim - pIni + 1;
+  const portasIP   = Math.round(totalPorts / ratio);
+  const portasExato = totalPorts / ratio;
+  const portasDiff  = Math.abs(portasIP - portasExato) > 0.01;
+
+  // Aviso se portas por IP não sair exato
+  let warnHtml = '';
+  if(portasDiff){
+    const excess = Math.round(totalPorts - (portasIP * ratio));
+    warnHtml = `<div style="background:rgba(227,179,65,.08);border:1px solid rgba(227,179,65,.3);border-radius:6px;padding:9px 14px;margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--yellow);line-height:1.7">
+      ⚠ Divisão não exata: ${totalPorts} portas ÷ ${ratio} = <strong>${portasExato.toFixed(4)}</strong><br>
+      SGP vai usar <strong>${portasIP} portas/IP</strong> (arredondado). Sobram ≈<strong>${excess} portas</strong> não alocadas.
+    </div>`;
+  }
+
+  // Info pills
+  infoEl.innerHTML = `
+    <span class="calc-info-pill">IPs públicos: <b>${pub.count}</b></span>
+    <span class="calc-info-pill">IPs privados: <b>${priv.count}</b></span>
+    <span class="calc-info-pill">Ratio: <b>${priv.count}/${pub.count} = ${ratio}x</b></span>
+    <span class="calc-info-pill">Total portas: <b>${totalPorts.toLocaleString('pt-BR')}</b></span>
+    <span class="calc-info-pill" style="${portasDiff?'border-color:rgba(227,179,65,.4);color:var(--yellow)':''}">Portas/IP: <b>${portasIP}${portasDiff?' ⚠':''}</b></span>
+  ` + warnHtml;
+
+  const out = `=== Informações para cadastro no SGP ===\nTipo: ${tipo}\nIP/Rede Saída (público): ${pub.cidr}\nNAT Rede (privado): ${priv.cidr}\nPorta inicial: ${pIni}\nPorta final: ${pFim}\nPortas por IP : ${portasIP}`;
+
+  document.getElementById('cc-out').textContent = out;
+  resEl.className='calc-result show';
+}
+
+function copySGP(){
+  const text = document.getElementById('cc-out').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.querySelector('.calc-copy');
+    btn.textContent='✓ copiado'; btn.style.color='var(--green)';
+    setTimeout(()=>{ btn.textContent='copiar'; btn.style.color=''; },1800);
+  });
+}
+
+function clearCalc(){
+  ['cc-pub','cc-priv'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('cc-pini').value='1025';
+  document.getElementById('cc-pfim').value='65535';
+  document.getElementById('cc-err').className='calc-error';
+  document.getElementById('cc-result').className='calc-result';
+  document.getElementById('cc-info').innerHTML='';
+}
+
+
+// ─── POPULATE CATEGORY SELECT ────────────────────────────────────
+function populateCatSelect(){
+  const sel = document.getElementById('fCat');
+  if(!sel) return;
+  const existing = [...sel.options].map(o=>o.value);
+  customCats.forEach(c=>{
+    if(!existing.includes(c.key)){
+      const opt = document.createElement('option');
+      opt.value=c.key; opt.textContent=c.icon+' '+c.label;
+      sel.appendChild(opt);
+    }
+  });
+}
+
+// ─── CATEGORY MODAL ───────────────────────────────────────────────
+function openCatModal(){
+  renderCatModal();
+  document.getElementById('cat-modal').classList.add('open');
+}
+function closeCatModal(){
+  document.getElementById('cat-modal').classList.remove('open');
+}
+function renderCatModal(){
+  const body = document.getElementById('cat-modal-body');
+  const cats = allCats();
+  let html = '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">';
+  cats.forEach((c,i)=>{
+    const isCustom = i >= DEFAULT_CATS.length;
+    html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px">
+      <span style="font-size:16px">${c.icon}</span>
+      <span style="flex:1;font-size:12.5px;font-weight:600">${c.label}</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)">${c.key}</span>
+      ${isCustom?`<button class="ebt ebt-del" onclick="deleteCat('${c.key}')">✕ excluir</button>`:'<span style="font-size:10px;color:var(--muted);font-family:JetBrains Mono,monospace">padrão</span>'}
+    </div>`;
+  });
+  html += '</div>';
+  html += `<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px">
+    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Nova Categoria</div>
+    <div style="display:grid;grid-template-columns:60px 1fr 1fr;gap:8px;align-items:end">
+      <div class="fg"><label class="fl">Ícone</label><input type="text" id="nc-icon" class="fi" placeholder="📁" maxlength="4" style="text-align:center;font-size:18px"></div>
+      <div class="fg"><label class="fl">Nome</label><input type="text" id="nc-name" class="fi" placeholder="Ex: Fibra FTTH"></div>
+      <div class="fg"><label class="fl">Chave (sem espaço)</label><input type="text" id="nc-key" class="fi" placeholder="ftth" oninput="this.value=this.value.replace(/[^a-z0-9_]/g,'')"></div>
+    </div>
+    <button class="calc-btn" onclick="addCat()" style="align-self:flex-start">＋ Adicionar Categoria</button>
+  </div>`;
+  body.innerHTML = html;
+}
+
+function addCat(){
+  const icon = document.getElementById('nc-icon').value.trim()||'📁';
+  const label = document.getElementById('nc-name').value.trim();
+  const key   = document.getElementById('nc-key').value.trim();
+  if(!label||!key){ toast('Nome e chave são obrigatórios',false); return; }
+  if(allCats().find(c=>c.key===key)){ toast('Essa chave já existe: '+key,false); return; }
+  customCats.push({key,icon,label});
+  saveCats();
+  renderNav();
+  populateCatSelect();
+  renderCatModal();
+  toast('Categoria "'+label+'" criada!',true);
+}
+
+function deleteCat(key){
+  if(!confirm('Excluir a categoria "'+getCatLabel(key)+'"? Os tópicos dela NÃO serão excluídos.')) return;
+  customCats = customCats.filter(c=>c.key!==key);
+  saveCats();
+  if(currentCat===key){ currentCat='all'; document.getElementById('page-title').textContent='Todos os Tópicos'; }
+  renderNav();
+  populateCatSelect();
+  renderCatModal();
+  applyFilters();
+  toast('Categoria excluída.',true);
+}
+
+// ─── SSL TOOL ────────────────────────────────────────────────────
+function sslToolHtml(){
+  return `<div class="calc-card" id="ssl-tool">
+    <div class="calc-card-header">
+      <span class="calc-tag">FERRAMENTA</span>
+      <span>🔒 SSL / Certificado de Domínio</span>
+    </div>
+    <div style="padding:14px 18px 10px;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input type="text" class="calc-input" id="ssl-domain" placeholder="cliente.sgp.net.br" style="flex:1;min-width:200px" onkeydown="if(event.key==='Enter')sslSetDomain()">
+      <button class="calc-btn" onclick="sslSetDomain()">✔ Usar domínio</button>
+      <button class="calc-btn" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)" onclick="sslClearAll()">✕ Limpar</button>
+    </div>
+    <div style="display:flex;border-bottom:1px solid var(--border);overflow-x:auto">
+      <button class="ssl-tab active" id="ssl-tab1" onclick="sslTab(1)">🔍 Verificar</button>
+      <button class="ssl-tab" id="ssl-tab2" onclick="sslTab(2)">📋 Instalar</button>
+      <button class="ssl-tab" id="ssl-tab3" onclick="sslTab(3)">🔄 Renovar</button>
+      <button class="ssl-tab" id="ssl-tab4" onclick="sslTab(4)">🐛 Erros</button>
+    </div>
+
+    <!-- TAB 1: VERIFICAR -->
+    <div class="ssl-panel" id="ssl-panel1">
+      <div style="display:flex;gap:8px;padding:14px 18px 6px;align-items:center;flex-wrap:wrap">
+        <button class="calc-btn" onclick="checkSSL()" id="ssl-check-btn" style="font-size:12px">🔍 Verificar Domínio</button>
+        <span style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace">Verifica DNS · Porta 80 · Porta 443 · Certificado SSL (crt.sh)</span>
+      </div>
+      <div id="ssl-check-results" style="padding:0 18px 14px;display:none;flex-direction:column;gap:8px">
+        <div id="ssl-checks-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px"></div>
+        <div id="ssl-cert-detail"></div>
+      </div>
+    </div>
+
+    <!-- TAB 2: INSTALAR -->
+    <div class="ssl-panel" id="ssl-panel2" style="display:none">
+      <div class="ssl-steps" id="ssl-install-steps"></div>
+    </div>
+
+    <!-- TAB 3: RENOVAR -->
+    <div class="ssl-panel" id="ssl-panel3" style="display:none">
+      <div style="padding:14px 18px 8px">
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px">Tipo do domínio do cliente</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="ssl-dtype-btns">
+          <button class="dtype-btn active" onclick="sslSetType('custom',this)">🌐 Domínio próprio</button>
+          <button class="dtype-btn" onclick="sslSetType('sgpnet',this)">sgp.net.br</button>
+          <button class="dtype-btn" onclick="sslSetType('sgplocal',this)">sgplocal.com.br</button>
+          <button class="dtype-btn" onclick="sslSetType('tsmx',this)">sgp.tsmx.com.br</button>
+          <button class="dtype-btn" onclick="sslSetType('tsmxapp',this)">sgp.tsmx.app</button>
+        </div>
+      </div>
+      <div class="ssl-steps" id="ssl-renew-steps"></div>
+    </div>
+
+    <!-- TAB 4: ERROS -->
+    <div class="ssl-panel" id="ssl-panel4" style="display:none">
+      <div class="ssl-steps" id="ssl-error-steps"></div>
+    </div>
+  </div>`;
+}
+
+let sslDomain = '';
+let sslDomainType = 'custom';
+
+function sslSetDomain(){
+  const raw = document.getElementById('ssl-domain').value.trim().replace(/^https?:\/\//,'').replace(/\/.*/,'');
+  if(!raw){ toast('Informe o domínio',false); return; }
+  sslDomain = raw;
+  // Auto-detect domain type
+  if(/\.sgp\.net\.br$/i.test(raw)) sslDomainType='sgpnet';
+  else if(/\.sgplocal\.com\.br$/i.test(raw)) sslDomainType='sgplocal';
+  else if(/\.sgp\.tsmx\.com\.br$/i.test(raw)) sslDomainType='tsmx';
+  else if(/\.sgp\.tsmx\.app$/i.test(raw)) sslDomainType='tsmxapp';
+  else sslDomainType='custom';
+  renderInstallSteps();
+  renderRenewSteps();
+  renderErrorSteps();
+  // Sync dtype button
+  document.querySelectorAll('.dtype-btn').forEach(b=>b.classList.remove('active'));
+  const typeMap={'custom':0,'sgpnet':1,'sgplocal':2,'tsmx':3,'tsmxapp':4};
+  const btns = document.querySelectorAll('.dtype-btn');
+  if(btns[typeMap[sslDomainType]]) btns[typeMap[sslDomainType]].classList.add('active');
+  toast('Domínio definido: '+sslDomain,true);
+}
+
+function sslTab(n){
+  for(let i=1;i<=4;i++){
+    document.getElementById('ssl-tab'+i).classList.toggle('active',i===n);
+    document.getElementById('ssl-panel'+i).style.display=i===n?'block':'none';
+  }
+}
+
+function sslSetType(type, el){
+  sslDomainType = type;
+  document.querySelectorAll('.dtype-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderRenewSteps();
+}
+
+function sslClearAll(){
+  sslDomain=''; sslDomainType='custom';
+  document.getElementById('ssl-domain').value='';
+  document.getElementById('ssl-check-results').style.display='none';
+  document.getElementById('ssl-checks-grid').innerHTML='';
+  document.getElementById('ssl-cert-detail').innerHTML='';
+  renderInstallSteps(); renderRenewSteps(); renderErrorSteps();
+}
+
+function d(){ return sslDomain||'DOMINIO'; }
+
+// ── STEP BUILDER ────────────────────────────────────────────────
+function sslStep(num, title, color, content){
+  const colors={green:'var(--green)',yellow:'var(--yellow)',blue:'var(--blue)',accent:'var(--accent)',muted:'var(--muted)'};
+  const c = colors[color]||color||'var(--accent)';
+  return `<div class="ssl-step">
+    <div class="ssl-step-header">
+      <span class="ssl-step-num" style="background:${c}">${num}</span>
+      <span class="ssl-step-title">${title}</span>
+    </div>
+    <div class="ssl-step-body">${content}</div>
+  </div>`;
+}
+
+function sslCmdBlock(label, cmd, id){
+  const uid = id||('sc'+Math.random().toString(36).slice(2,8));
+  return `<div class="code-block" style="margin:6px 0">
+    <div class="code-header">
+      <span class="code-label">${label||'bash'}</span>
+      <button class="copy-btn" onclick="document.getElementById('${uid}').textContent&&navigator.clipboard.writeText(document.getElementById('${uid}').textContent).then(()=>{this.textContent='✓';this.classList.add('copied');setTimeout(()=>{this.textContent='copiar';this.classList.remove('copied')},1500)})">copiar</button>
+    </div>
+    <pre id="${uid}">${cmd}</pre>
+  </div>`;
+}
+
+function sslNote(text, type){
+  const s=type==='warn'?'rgba(227,179,65,.08);border-color:rgba(227,179,65,.3);color:var(--yellow)':
+           type==='err'?'rgba(247,129,102,.08);border-color:rgba(247,129,102,.3);color:var(--accent2)':
+           'rgba(88,166,255,.08);border-color:rgba(88,166,255,.25);color:var(--blue)';
+  return `<div style="background:${s};border:1px solid;border-radius:6px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;margin:6px 0">${text}</div>`;
+}
+
+// ── INSTALL STEPS ──────────────────────────────────────────────
+function renderInstallSteps(){
+  const el = document.getElementById('ssl-install-steps');
+  if(!el) return;
+  const dom = d();
+  el.innerHTML =
+    sslStep(1,'DNS e Portas — verificar antes de começar','blue',
+      sslNote('⚠ Antes de gerar o certificado: o domínio deve apontar para o IP do servidor SGP e as portas 80 e 443 devem estar abertas externamente. Use a aba <strong>Verificar</strong> para confirmar.','warn')
+    )+
+    sslStep(2,'Instalar o Certbot','accent',
+      sslCmdBlock('bash','apt update\napt install certbot -y')+
+      sslNote('💡 Debian 10 — erro 404 ao instalar: execute o comando abaixo e tente novamente:')+
+      sslCmdBlock('bash (Debian 10)','sed -i s/deb.debian/archive.debian/g /etc/apt/sources.list\napt update\napt install certbot -y')
+    )+
+    sslStep(3,'Editar o arquivo sgp-https.conf','accent',
+      sslCmdBlock('bash','nano /etc/nginx/sgp/sgp-https.conf')+
+      sslNote('Adicionar o bloco <code>location /.well-known/</code> dentro do arquivo:')+
+      sslCmdBlock('nginx',`rewrite ^/$              /admin/;
+location / {
+    root /var/www;
+    proxy_pass http://unix:/run/gunicorn/sgp.socket;
+    include proxy_params;
+    include pix_params;
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+}
+
+# Adicionar este bloco:
+location /.well-known/ {
+    root /var/www;
+}`)
+    )+
+    sslStep(4,'Verificar arquivo Default do nginx','accent',
+      sslCmdBlock('bash','ls /etc/nginx/sites-enabled/')+
+      sslNote('Se existir o arquivo <strong>default</strong>, mover para /tmp:')+
+      sslCmdBlock('bash','mv /etc/nginx/sites-enabled/default /tmp\n/etc/init.d/nginx restart')
+    )+
+    sslStep(5,'Gerar certificado','green',
+      sslNote('⚠ <strong>Limite: 5 tentativas por hora.</strong> Sempre faça o dry-run primeiro para evitar erros.','warn')+
+      sslCmdBlock('bash — dry-run (teste)'  ,`certbot certonly --register-unsafely-without-email --webroot -d ${dom} --dry-run`)+
+      sslNote('✓ Se a saída mostrar <strong>"Congratulations, all simulations pass"</strong> — prossiga para o próximo comando:','info')+
+      sslCmdBlock('bash — gerar certificado',`certbot certonly --register-unsafely-without-email --webroot -w /var/www -d ${dom}`)
+    )+
+    sslStep(6,'Editar arquivo nginx do perfil','accent',
+      sslCmdBlock('bash',`nano /etc/nginx/sites-enabled/sgp`)+
+      sslNote('Descomentar as linhas com letsencrypt e comentar as com /etc/nginx/ssl:')+
+      sslCmdBlock('nginx',`    ssl_certificate /etc/letsencrypt/live/${dom}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${dom}/privkey.pem;
+#   ssl_certificate /etc/nginx/ssl/server.crt;
+#   ssl_certificate_key /etc/nginx/ssl/server.key;`)
+    )+
+    sslStep(7,'Restart nginx e gunicorn','accent',
+      sslNote('Testar o nginx antes de reiniciar:')+
+      sslCmdBlock('bash',`nginx -t\n/etc/init.d/nginx restart\nsystemctl restart gunicorn_sgp`)
+    )+
+    sslStep(8,'Renovação automática — cron','green',
+      sslCmdBlock('bash','nano /etc/cron.d/certbot')+
+      sslCmdBlock('cron',`SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+0 0 */89 * * certbot renew --quiet --nginx && nginx -s reload`)+
+      sslCmdBlock('bash','\/etc/init.d/cron restart')
+    );
+}
+
+// ── RENEW STEPS ───────────────────────────────────────────────
+function renderRenewSteps(){
+  const el = document.getElementById('ssl-renew-steps');
+  if(!el) return;
+  const dom = d();
+  let html = '';
+
+  html += sslStep(1,'Verificar certificado atual','blue',
+    sslCmdBlock('bash','certbot certificates')
+  );
+
+  if(sslDomainType==='custom'){
+    html += sslStep(2,'Renovar certificado (domínio próprio)','green',
+      sslNote('Tentativa simples primeiro:')+
+      sslCmdBlock('bash','certbot renew')+
+      sslNote('Se o certificado ainda não estiver vencido (forçar renovação):')+
+      sslCmdBlock('bash',`certbot certonly --force-renew -d ${dom}`)+
+      sslNote('Renovar todos os certificados de uma vez:')+
+      sslCmdBlock('bash','certbot renew --force-renewal')+
+      sslCmdBlock('bash','/etc/init.d/nginx reload')
+    );
+  } else if(sslDomainType==='sgpnet'){
+    html += sslStep(2,'Renovar — domínio sgp.net.br','yellow',
+      sslNote('Para domínios sgp.net.br usar o script de update centralizado:')+
+      sslCmdBlock('bash',`apt -y install curl
+curl -k -f https://sgp.net.br/updatessl/server.crt -o /etc/nginx/ssl/server.crt
+curl -k -f https://sgp.net.br/updatessl/server.key -o /etc/nginx/ssl/server.key
+service nginx reload`)+
+      sslNote('Configuração correta no nginx (arquivo do perfil):')+
+      sslCmdBlock('nginx',`#   ssl_certificate /etc/letsencrypt/live/${dom}/fullchain.pem;
+#   ssl_certificate_key /etc/letsencrypt/live/${dom}/privkey.pem;
+    ssl_certificate /etc/nginx/ssl/server.crt;
+    ssl_certificate_key /etc/nginx/ssl/server.key;`)
+    );
+  } else if(sslDomainType==='sgplocal'){
+    html += sslStep(2,'Renovar — domínio sgplocal.com.br','yellow',
+      sslCmdBlock('bash',`curl sgp.net.br/updatessl/local/server.crt -sf -o /etc/nginx/ssl/server_sgplocal.crt
+curl sgp.net.br/updatessl/local/server.key -sf -o /etc/nginx/ssl/server_sgplocal.key
+systemctl reload nginx`)+
+      sslNote('Configuração correta no nginx (arquivo do perfil):')+
+      sslCmdBlock('nginx',`#   ssl_certificate /etc/letsencrypt/live/${dom}/fullchain.pem;
+#   ssl_certificate_key /etc/letsencrypt/live/${dom}/privkey.pem;
+    ssl_certificate /etc/nginx/ssl/server_sgplocal.crt;
+    ssl_certificate_key /etc/nginx/ssl/server_sgplocal.key;`)
+    );
+  } else if(sslDomainType==='tsmx'){
+    html += sslStep(2,'Renovar — domínio sgp.tsmx.com.br','yellow',
+      sslCmdBlock('bash',`curl -f http://sgp.net.br/updatessl/sgp.tsmx.com.br/STAR_sgp_tsmx_com_br.crt -o /etc/nginx/ssl/STAR_sgp_tsmx_com_br.crt
+curl -f http://sgp.net.br/updatessl/sgp.tsmx.com.br/STAR_sgp_tsmx_com_br.key -o /etc/nginx/ssl/STAR_sgp_tsmx_com_br.key`)+
+      sslNote('Configuração correta no nginx (arquivo do perfil):')+
+      sslCmdBlock('nginx',`#   ssl_certificate /etc/letsencrypt/live/${dom}/fullchain.pem;
+#   ssl_certificate_key /etc/letsencrypt/live/${dom}/privkey.pem;
+    ssl_certificate /etc/nginx/ssl/STAR_sgp_tsmx_com_br.crt;
+    ssl_certificate_key /etc/nginx/ssl/STAR_sgp_tsmx_com_br.key;`)
+    );
+  } else if(sslDomainType==='tsmxapp'){
+    html += sslStep(2,'Renovar — domínio sgp.tsmx.app','yellow',
+      sslCmdBlock('bash',`curl -f http://sgp.net.br/updatessl/sgp.tsmx.app/STAR.sgp.tsmx.app.crt -o /etc/nginx/ssl/STAR.sgp.tsmx.app.crt
+curl -f http://sgp.net.br/updatessl/sgp.tsmx.app/STAR.sgp.tsmx.app.key -o /etc/nginx/ssl/STAR.sgp.tsmx.app.key
+systemctl reload nginx`)+
+      sslNote('Configuração correta no nginx (arquivo do perfil):')+
+      sslCmdBlock('nginx',`#   ssl_certificate /etc/letsencrypt/live/${dom}/fullchain.pem;
+#   ssl_certificate_key /etc/letsencrypt/live/${dom}/privkey.pem;
+    ssl_certificate /etc/nginx/ssl/STAR.sgp.tsmx.app.crt;
+    ssl_certificate_key /etc/nginx/ssl/STAR.sgp.tsmx.app.key;`)
+    );
+  }
+
+  html += sslStep(3,'Deletar certificado com erro (se necessário)','accent',
+    sslCmdBlock('bash',`certbot delete --cert-name ${dom}`)
+  );
+
+  el.innerHTML = html;
+}
+
+// ── ERROR STEPS ───────────────────────────────────────────────
+function renderErrorSteps(){
+  const el = document.getElementById('ssl-error-steps');
+  if(!el) return;
+  el.innerHTML =
+    sslStep(1,'Porta 80 / 443 bloqueada','blue',
+      sslNote('A causa mais comum de falha no certbot é a porta 80 ou 443 inacessível externamente. Use a aba <strong>Verificar</strong> para confirmar antes de continuar.','warn')
+    )+
+    sslStep(2,'Verificar versão do Debian','accent',
+      sslCmdBlock('bash','hostnamectl')+
+      sslNote('<strong>Debian 8:</strong> Precisa de suporte estendido do desenvolvedor.<br><strong>Debian 9:</strong> Reinstalar certbot via snap (ver abaixo).<br><strong>Debian 10:</strong> Usar comando de force-renew ou reinstalar certbot.')
+    )+
+    sslStep(3,'Reinstalar certbot via snap (Debian 9)','accent',
+      sslCmdBlock('bash',`apt install snapd\nsnap install core\nsnap install --classic certbot`)
+    )+
+    sslStep(4,'Erro "Another instance of Certbot is already running"','yellow',
+      sslNote('Remover arquivo de lock e tentar novamente:','warn')+
+      sslCmdBlock('bash','find / -type f -name ".certbot.lock" -exec rm {} \\;')
+    )+
+    sslStep(5,'Erro de lib Python / certbot corrompido','accent',
+      sslNote('Remover e reinstalar o certbot completamente:','err')+
+      sslCmdBlock('bash',`apt remove --purge -y certbot python3-certbot python3-openssl python3-cryptography python3-acme python3-josepy\napt install certbot -y`)+
+      sslNote('Se o erro persistir após reinstalar:')+
+      sslCmdBlock('bash',`python3 -m pip install pip --upgrade\npython3 -m pip install "urllib3<2.0"\npython3 -m pip install "pyOpenSSL<=23.1.1"`)+ 
+      sslNote('Se nenhum método acima funcionar:')+
+      sslCmdBlock('bash','python3 -m pip install certbot certbot-nginx')
+    );
+}
+
+// ── SSL CHECKER ───────────────────────────────────────────────
+async function checkSSL(){
+  const domain = sslDomain || document.getElementById('ssl-domain').value.trim().replace(/^https?:\/\//,'').replace(/\/.*/,'');
+  if(!domain){ toast('Defina o domínio primeiro (botão "Usar domínio")',false); return; }
+  const btn = document.getElementById('ssl-check-btn');
+  btn.textContent='⏳ Verificando...'; btn.disabled=true;
+  const grid = document.getElementById('ssl-checks-grid');
+  const detail = document.getElementById('ssl-cert-detail');
+  document.getElementById('ssl-check-results').style.display='flex';
+  detail.innerHTML=''; 
+
+  function chk(id,label,state,info){
+    const c={ok:'var(--green)',err:'var(--accent2)',warn:'var(--yellow)',loading:'var(--muted)'};
+    const ic={ok:'✓',err:'✗',warn:'⚠',loading:'⏳'};
+    let el=document.getElementById('ssl-chk-'+id);
+    const html=`<div style="background:var(--bg);border:1px solid ${c[state]};border-radius:6px;padding:10px 14px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+        <span style="color:${c[state]};font-weight:800">${ic[state]}</span>
+        <span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:${c[state]}">${label}</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;line-height:1.5">${info}</div>
+    </div>`;
+    if(el) el.innerHTML=html.replace(/^<div/,'<div id="ssl-chk-'+id+'" ');
+    return `<div id="ssl-chk-${id}">${html}</div>`;
+  }
+
+  grid.innerHTML = chk('dns','DNS','loading','Consultando...')+chk('http','Porta 80','loading','Aguardando...')+chk('https','Porta 443','loading','Aguardando...')+chk('cert','Certificado SSL','loading','Aguardando...');
+
+  function upd(id,label,state,info){
+    const c={ok:'var(--green)',err:'var(--accent2)',warn:'var(--yellow)',loading:'var(--muted)'};
+    const ic={ok:'✓',err:'✗',warn:'⚠',loading:'⏳'};
+    const el=document.getElementById('ssl-chk-'+id);
+    if(el) el.innerHTML=`<div style="background:var(--bg);border:1px solid ${c[state]};border-radius:6px;padding:10px 14px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+        <span style="color:${c[state]};font-weight:800">${ic[state]}</span>
+        <span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:${c[state]}">${label}</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;line-height:1.5">${info}</div>
+    </div>`;
+  }
+
+  // DNS
+  try{
+    const r=await fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=A`);
+    const j=await r.json();
+    if(j.Answer&&j.Answer.length){
+      const ips=j.Answer.filter(a=>a.type===1).map(a=>a.data);
+      upd('dns','DNS','ok','Resolve para: '+ips.join(', '));
+    } else if(j.Status===3){
+      upd('dns','DNS','err','NXDOMAIN — domínio não existe ou não aponta para nenhum IP.<br>Verifique o apontamento DNS antes de prosseguir.');
+    } else { upd('dns','DNS','warn','Resposta inesperada (status '+j.Status+')'); }
+  } catch(e){ upd('dns','DNS','err','Falha ao consultar DNS: '+e.message); }
+
+  // Ports
+  const checkPort = async(scheme,id,label)=>{
+    try{
+      const ctrl=new AbortController();
+      const t=setTimeout(()=>ctrl.abort(),8000);
+      await fetch(scheme+'://'+domain+'/',{mode:'no-cors',signal:ctrl.signal});
+      clearTimeout(t);
+      upd(id,label,'ok','Porta acessível — conexão estabelecida');
+    }catch(e){
+      if(e.name==='AbortError') upd(id,label,'err','Timeout — porta não respondeu em 8s.<br>Verifique firewall/liberar porta.');
+      else upd(id,label,'err','Inacessível — verifique firewall e se o nginx está rodando.');
+    }
+  };
+  await Promise.all([checkPort('http','http','Porta 80'),checkPort('https','https','Porta 443')]);
+
+  // Certificate via crt.sh
+  try{
+    const r=await fetch(`https://crt.sh/?q=${encodeURIComponent(domain)}&output=json`,{signal:AbortSignal.timeout(15000)});
+    if(!r.ok) throw new Error('crt.sh '+r.status);
+    const certs=await r.json();
+    if(!certs||!certs.length){ upd('cert','Certificado SSL','warn','Nenhum certificado encontrado no crt.sh para este domínio.'); }
+    else{
+      const sorted=certs.filter(c=>c.not_after).sort((a,b)=>new Date(b.not_after)-new Date(a.not_after));
+      const best=sorted[0];
+      const expiry=new Date(best.not_after);
+      const issuedAt=new Date(best.not_before);
+      const now=new Date();
+      const days=Math.round((expiry-now)/(1000*60*60*24));
+      const state=days<0?'err':days<14?'err':days<30?'warn':'ok';
+      const daysMsg=days<0?`EXPIRADO há ${Math.abs(days)} dias ⚠`:`Expira em ${days} dias`;
+      const issuer=(best.issuer_name||best.issuer||'');
+      const isLE=issuer.includes("Let's Encrypt")||/\bR\d+\b|\bE\d+\b/.test(issuer);
+      upd('cert','Certificado SSL',state,
+        `Emissor: ${isLE?"<strong style='color:var(--green)'>Let's Encrypt</strong>":issuer.replace(/[A-Z]+=(?=.*=)/g,'').trim().slice(0,60)}<br>`+
+        `Emitido: ${issuedAt.toLocaleDateString('pt-BR')} &nbsp;→&nbsp; Expira: <strong>${expiry.toLocaleDateString('pt-BR')}</strong><br>`+
+        `<strong>${daysMsg}</strong>`
+      );
+      // Show renewal hint if expiring soon
+      if(days<30){
+        const renewCmd = days<0||isLE
+          ? `certbot certonly --force-renew -d ${domain}\n/etc/init.d/nginx reload`
+          : `certbot renew`;
+        detail.innerHTML=`<div style="background:rgba(247,129,102,.06);border:1px solid rgba(247,129,102,.3);border-radius:6px;padding:10px 14px">
+          <div style="font-size:11px;font-weight:800;color:var(--accent2);margin-bottom:8px">${days<0?'🔴 CERTIFICADO EXPIRADO':'🟡 CERTIFICADO EXPIRANDO EM BREVE'} — Ir para aba <strong>Renovar</strong> para ver os comandos completos.</div>
+          <div class="code-block"><div class="code-header"><span class="code-label">bash — renovação rápida</span><button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('ssl-quick-renew').textContent).then(()=>{this.textContent='✓ copiado';setTimeout(()=>this.textContent='copiar',1500)})">copiar</button></div><pre id="ssl-quick-renew">${renewCmd}</pre></div>
+        </div>`;
+      }
+    }
+  }catch(e){ upd('cert','Certificado SSL','warn','Não foi possível consultar crt.sh: '+e.message); }
+
+  btn.textContent='🔍 Verificar Domínio'; btn.disabled=false;
+}
+
+function sslClearAll(){
+  sslDomain=''; document.getElementById('ssl-domain').value='';
+  document.getElementById('ssl-check-results').style.display='none';
+  renderInstallSteps(); renderRenewSteps(); renderErrorSteps();
+}
+
+
+// ─── EDIT MODE ────────────────────────────────────────────────────
+function toggleEdit(){
+  editMode=!editMode;
+  const btn=document.getElementById('editBtn');
+  btn.textContent=editMode?'🔒 Sair':'✏️ Editar';
+  btn.classList.toggle('edit-active',editMode);
+  document.getElementById('edit-banner').style.display=editMode?'block':'none';
+  document.getElementById('fab').style.display=editMode?'flex':'none';
+  document.querySelectorAll('.card-actions').forEach(el=>el.style.display=editMode?'flex':'none');
+}
+
+// ─── MODAL ────────────────────────────────────────────────────────
+function openModal(id){
+  editingId=id;
+  document.getElementById('modal-title').textContent=id?'Editar Tópico':'Novo Tópico';
+  const item=id?data.find(d=>d.id===id):null;
+  document.getElementById('fCat').value=item?item.cat:(currentCat!=='all'?currentCat:'vpn');
+  document.getElementById('fTag').value=item?item.tag:'cmd';
+  document.getElementById('fTitle').value=item?item.title:'';
+  document.getElementById('fDesc').value=item?(item.desc||''):'';
+  document.getElementById('fCodes').innerHTML='';
+  if(item&&item.codes) item.codes.forEach(c=>addCode(c));
+  document.getElementById('fLinks').innerHTML='';
+  if(item&&item.links) item.links.forEach(l=>addLink(l));
+  document.getElementById('modal').classList.add('open');
+  setTimeout(()=>document.getElementById('fTitle').focus(),80);
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); editingId=null; }
+function addCode(c){
+  const d=document.createElement('div'); d.className='code-entry';
+  d.innerHTML=`<div class="code-entry-top"><input type="text" class="fi" placeholder="Label (bash, cisco...)" value="${esc((c&&c.label)||'')}"><button type="button" class="rm-btn" onclick="this.closest('.code-entry').remove()">✕</button></div><textarea class="ft" rows="4" placeholder="Cole o comando aqui...">${esc((c&&c.code)||'')}</textarea>`;
+  document.getElementById('fCodes').appendChild(d);
+}
+function addLink(u){
+  const d=document.createElement('div'); d.className='link-entry';
+  d.innerHTML=`<input type="text" class="fi" placeholder="https://bookstack.tsmx.net.br/..." value="${esc(u||'')}"><button type="button" class="rm-btn" onclick="this.closest('.link-entry').remove()">✕</button>`;
+  document.getElementById('fLinks').appendChild(d);
+}
+function saveItem(){
+  const title=document.getElementById('fTitle').value.trim();
+  if(!title){ toast('Título é obrigatório',false); return; }
+  const codes=[];
+  document.querySelectorAll('#fCodes .code-entry').forEach(el=>{ const label=el.querySelector('input').value.trim()||'bash'; const code=el.querySelector('textarea').value; if(code.trim()) codes.push({label,code}); });
+  const links=[];
+  document.querySelectorAll('#fLinks .link-entry input').forEach(el=>{ if(el.value.trim()) links.push(el.value.trim()); });
+  const item={id:editingId||nextId++,cat:document.getElementById('fCat').value,tag:document.getElementById('fTag').value,title,desc:document.getElementById('fDesc').value.trim()||undefined,codes:codes.length?codes:undefined,links:links.length?links:undefined};
+  if(editingId){ const idx=data.findIndex(d=>d.id===editingId); if(idx>=0) data[idx]=item; }
+  else data.push(item);
+  persist(data); buildCounts(); applyFilters(); closeModal();
+  toast(editingId?'Tópico atualizado!':'Tópico adicionado!',true);
+}
+function del(id){
+  if(!confirm('Excluir este tópico permanentemente?')) return;
+  data=data.filter(d=>d.id!==id);
+  persist(data); buildCounts(); applyFilters(); toast('Tópico excluído.',true);
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────
+function toast(msg,ok){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast '+(ok?'ok':'err'); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+
+// ─── EXPORT ───────────────────────────────────────────────────────
+function exportHTML(){
+  const serialized = JSON.stringify(data,null,2);
+  const marker = 'const DEFAULT_DATA = ';
+  let html = document.documentElement.outerHTML;
+  const s = html.indexOf(marker);
+  const e = html.indexOf(';\n', s) + 2;
+  if(s<0){ toast('Erro ao exportar',false); return; }
+  const newHtml = html.slice(0,s) + marker + serialized + ';\n' + html.slice(e);
+  const blob = new Blob([newHtml],{type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'manual_tecnico.html';
+  a.click();
+  toast('HTML exportado com todas as edições!',true);
+}
+
+// ─── RESET ────────────────────────────────────────────────────────
+function resetData(){
+  if(!confirm('Restaurar dados originais? Todas as edições serão perdidas.')) return;
+  localStorage.removeItem(SK); localStorage.removeItem(SD);
+  data=JSON.parse(JSON.stringify(DEFAULT_DATA));
+  nextId=Math.max(0,...data.map(d=>d.id))+1;
+  persist(data); buildCounts(); applyFilters(); toast('Dados restaurados.',true);
+}
+
+// ─── KEYBOARD & EVENTS ───────────────────────────────────────────
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); if((e.ctrlKey||e.metaKey)&&e.key==='e'){e.preventDefault();toggleEdit();} });
+document.getElementById('modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeModal(); });
+document.getElementById('search').addEventListener('input',function(){ currentQuery=this.value.trim(); applyFilters(); });
+
+// ─── INIT ─────────────────────────────────────────────────────────
+loadCats();
+const savedDate=localStorage.getItem(SD);
+if(savedDate) document.getElementById('s-date').textContent=savedDate;
+renderNav();
+applyFilters();
+populateCatSelect();
+</script>
+</body>
+</html>
