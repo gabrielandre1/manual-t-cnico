@@ -264,7 +264,7 @@ a.ext-link:hover{text-decoration:underline;}
       </button>
     </div>
   </div>
-  <div id="gh-banner" style="display:none;padding:5px 28px;font-family:'JetBrains Mono',monospace;font-size:10px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
+  <div id="gh-banner" style="display:none;padding:5px 28px;font-family:'JetBrains Mono',monospace;font-size:10px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0;">
     <span id="gh-banner-txt" style="color:var(--muted)"></span>
     <button onclick="ghSync()" style="background:none;border:1px solid var(--border);color:var(--blue);font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 10px;border-radius:4px;cursor:pointer;">↑ Salvar no GitHub</button>
   </div>
@@ -901,8 +901,24 @@ const SK = 'manual_tsmx_v2';
 const SD = 'manual_tsmx_date';
 let editMode = false, currentCat = 'all', currentQuery = '', editingId = null;
 
-function loadData(){ try{ const r=localStorage.getItem(SK); if(r) return JSON.parse(r); }catch(e){} return JSON.parse(JSON.stringify(DEFAULT_DATA)); }
-function persist(d){ localStorage.setItem(SK,JSON.stringify(d)); const n=new Date(); const s=n.toLocaleDateString('pt-BR')+' '+n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); localStorage.setItem(SD,s); document.getElementById('s-date').textContent=s; }
+function loadData(){
+  try{ const r=localStorage.getItem(SK); if(r) return JSON.parse(r); }catch(e){}
+  // No localStorage: use DEFAULT_DATA (embedded in HTML from last GitHub sync)
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+function persist(d){
+  localStorage.setItem(SK,JSON.stringify(d));
+  const n=new Date();
+  const ts=n.toLocaleDateString('pt-BR')+' '+n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  localStorage.setItem(SD,ts);
+  const dateEl=document.getElementById('s-date');
+  if(dateEl) dateEl.textContent=ts;
+  // GitHub auto-save (debounced 3s)
+  if(window.ghAutoSave){
+    clearTimeout(window.ghDebT);
+    window.ghDebT=setTimeout(()=>ghPush(false),3000);
+  }
+}
 
 let data = loadData();
 let nextId = Math.max(0,...data.map(d=>d.id)) + 1;
@@ -2363,306 +2379,294 @@ populateCatSelect();
 
 
 
+
 <!-- GITHUB SYNC MODAL -->
 <div class="modal-overlay" id="gh-modal">
-  <div class="modal" style="max-width:480px">
+  <div class="modal" style="max-width:500px">
     <div class="modal-header">
-      <span class="modal-title">☁ Sincronização com GitHub</span>
-      <button class="modal-close" onclick="ghClosePanel()">×</button>
+      <span class="modal-title" style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:18px">☁</span> Sincronização GitHub
+      </span>
+      <button class="modal-close" onclick="document.getElementById('gh-modal').classList.remove('open')">×</button>
     </div>
-    <div class="modal-body" id="gh-modal-body">
-      <div id="gh-config-section">
-        <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px;font-family:'JetBrains Mono',monospace">
-          Sincronize seus tópicos e categorias diretamente com o repositório GitHub.<br>
-          As alterações ficam disponíveis em <strong style="color:var(--blue)">qualquer dispositivo</strong> que acessar a URL.
-        </div>
-        <div class="fg" style="margin-bottom:10px">
-          <label class="fl">Usuário GitHub</label>
-          <input type="text" id="gh-user" class="fi" placeholder="gabrielandre1">
-        </div>
-        <div class="fg" style="margin-bottom:10px">
-          <label class="fl">Repositório</label>
-          <input type="text" id="gh-repo" class="fi" placeholder="manual-t-cnico">
-        </div>
-        <div class="fg" style="margin-bottom:10px">
-          <label class="fl">Nome do arquivo no repo</label>
-          <input type="text" id="gh-file" class="fi" placeholder="manual_tecnico.html" value="manual_tecnico.html">
-        </div>
-        <div class="fg" style="margin-bottom:10px">
-          <label class="fl">Branch</label>
-          <input type="text" id="gh-branch" class="fi" placeholder="main" value="main">
-        </div>
-        <div class="fg" style="margin-bottom:4px">
-          <label class="fl">Personal Access Token</label>
-          <input type="password" id="gh-token" class="fi" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
-        </div>
-        <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;line-height:1.7;margin-bottom:14px">
-          🔑 Crie em <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--blue)">github.com/settings/tokens</a><br>
-          Permissão necessária: <strong>repo</strong> (ou <strong>contents: write</strong> para fine-grained)<br>
-          🔒 Salvo apenas no localStorage deste navegador
-        </div>
-        <div id="gh-status" style="display:none;font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px 12px;border-radius:6px;margin-bottom:10px"></div>
+    <div class="modal-body">
+      <div style="background:rgba(88,166,255,.06);border:1px solid rgba(88,166,255,.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;line-height:1.8">
+        📌 Como funciona: ao salvar, o manual completo (com seus tópicos e categorias) é gravado
+        diretamente no seu repositório GitHub via API. Qualquer dispositivo que abrir a URL do
+        GitHub Pages verá os dados atualizados automaticamente.
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div class="fg"><label class="fl">Usuário GitHub</label><input type="text" id="gh-user" class="fi" placeholder="gabrielandre1"></div>
+        <div class="fg"><label class="fl">Repositório</label><input type="text" id="gh-repo" class="fi" placeholder="manual-t-cnico"></div>
+        <div class="fg"><label class="fl">Arquivo</label><input type="text" id="gh-file" class="fi" value="manual_tecnico.html"></div>
+        <div class="fg"><label class="fl">Branch</label><input type="text" id="gh-branch" class="fi" value="main"></div>
+      </div>
+      <div class="fg" style="margin-bottom:6px">
+        <label class="fl">Personal Access Token (PAT)</label>
+        <div style="display:flex;gap:6px">
+          <input type="password" id="gh-token" class="fi" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="flex:1" autocomplete="off">
+          <button class="mbtn" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);white-space:nowrap;font-size:11px" onclick="const t=document.getElementById('gh-token');t.type=t.type==='password'?'text':'password'">👁</button>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;line-height:1.8;margin-bottom:14px">
+        🔑 Crie em <a href="https://github.com/settings/tokens/new" target="_blank" style="color:var(--blue)">github.com/settings/tokens</a>
+        → <strong>Generate new token (classic)</strong> → marque <strong>repo</strong> → copie o token<br>
+        🔒 O token fica salvo apenas no localStorage deste navegador (nunca enviado para terceiros)
+      </div>
+      <div id="gh-status" style="display:none;font-family:'JetBrains Mono',monospace;font-size:11px;padding:10px 14px;border-radius:6px;line-height:1.6"></div>
     </div>
     <div class="modal-footer" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="mbtn" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted)" onclick="ghTestConnection()">🔌 Testar</button>
-        <button class="mbtn" style="background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.3);color:var(--blue)" onclick="ghPull()">⬇ Puxar do GitHub</button>
-      </div>
       <div style="display:flex;gap:6px">
-        <button class="mbtn mbtn-cancel" onclick="ghClosePanel()">Fechar</button>
-        <button class="mbtn mbtn-save" onclick="ghSaveConfig()">💾 Salvar Config & Enviar</button>
+        <button class="mbtn" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:11px" onclick="ghTest()">🔌 Testar conexão</button>
+        <button class="mbtn" style="background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.3);color:var(--blue);font-size:11px" onclick="ghPull()">⬇ Puxar do GitHub</button>
       </div>
+      <button class="mbtn mbtn-save" onclick="ghSave()">☁ Salvar no GitHub</button>
     </div>
   </div>
 </div>
-
 </body>
 </html>
+
 <script>
-// ─── GITHUB SYNC ──────────────────────────────────────────────────
-const GH_SK = 'manual_gh_config';
+/* ═══════════ GITHUB SYNC ═══════════════════════════════════════ */
+const GH_CFG_KEY = 'manual_gh_v2';
+window.ghAutoSave = false;
+window.ghDebT = null;
 
-function ghLoadConfig(){
-  try{ return JSON.parse(localStorage.getItem(GH_SK)||'{}'); }catch(e){ return {}; }
-}
-function ghSaveConfigLS(cfg){
-  localStorage.setItem(GH_SK, JSON.stringify(cfg));
-}
+// ── Config persistence ─────────────────────────────────────────
+function ghCfg(){ try{ return JSON.parse(localStorage.getItem(GH_CFG_KEY)||'{}'); }catch(e){ return {}; } }
+function ghCfgSet(c){ localStorage.setItem(GH_CFG_KEY, JSON.stringify(c)); }
 
-function ghOpenPanel(){
-  const cfg = ghLoadConfig();
-  if(cfg.user)   document.getElementById('gh-user').value   = cfg.user;
-  if(cfg.repo)   document.getElementById('gh-repo').value   = cfg.repo;
-  if(cfg.file)   document.getElementById('gh-file').value   = cfg.file;
-  if(cfg.branch) document.getElementById('gh-branch').value = cfg.branch;
-  if(cfg.token)  document.getElementById('gh-token').value  = cfg.token;
-  document.getElementById('gh-status').style.display='none';
-  document.getElementById('gh-modal').classList.add('open');
-}
-function ghClosePanel(){
-  document.getElementById('gh-modal').classList.remove('open');
-}
-
-function ghStatus(msg, ok){
-  const el=document.getElementById('gh-status');
-  el.textContent=msg;
-  el.style.cssText=`display:block;background:${ok?'rgba(63,185,80,.1)':'rgba(247,129,102,.1)'};border:1px solid ${ok?'rgba(63,185,80,.3)':'rgba(247,129,102,.3)'};color:${ok?'var(--green)':'var(--accent2)'}`;
-}
-
-function ghGetInputs(){
+function ghInputs(){
   return {
-    user:   document.getElementById('gh-user').value.trim(),
-    repo:   document.getElementById('gh-repo').value.trim(),
-    file:   document.getElementById('gh-file').value.trim()||'manual_tecnico.html',
-    branch: document.getElementById('gh-branch').value.trim()||'main',
-    token:  document.getElementById('gh-token').value.trim(),
+    user:   (document.getElementById('gh-user')?.value||'').trim(),
+    repo:   (document.getElementById('gh-repo')?.value||'').trim(),
+    file:   (document.getElementById('gh-file')?.value||'manual_tecnico.html').trim(),
+    branch: (document.getElementById('gh-branch')?.value||'main').trim(),
+    token:  (document.getElementById('gh-token')?.value||'').trim(),
   };
 }
 
-async function ghApiGet(cfg, path){
-  const r = await fetch(`https://api.github.com/repos/${cfg.user}/${cfg.repo}${path}?ref=${cfg.branch}`, {
-    headers: {
-      'Authorization': `token ${cfg.token}`,
-      'Accept': 'application/vnd.github.v3+json',
+function ghStatus(msg, ok, loading){
+  const el = document.getElementById('gh-status');
+  if(!el) return;
+  const bg   = loading ? 'rgba(88,166,255,.08)'  : ok ? 'rgba(63,185,80,.08)'   : 'rgba(247,129,102,.08)';
+  const bdr  = loading ? 'rgba(88,166,255,.3)'   : ok ? 'rgba(63,185,80,.3)'    : 'rgba(247,129,102,.3)';
+  const clr  = loading ? 'var(--blue)'            : ok ? 'var(--green)'           : 'var(--accent2)';
+  el.style.cssText = `display:block;background:${bg};border:1px solid ${bdr};color:${clr};font-family:'JetBrains Mono',monospace;font-size:11px;padding:10px 14px;border-radius:6px;line-height:1.6`;
+  el.innerHTML = msg;
+}
+
+// ── GitHub API helpers ─────────────────────────────────────────
+async function ghGet(cfg){
+  const r = await fetch(
+    `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/${cfg.file}?ref=${cfg.branch}&t=${Date.now()}`,
+    { headers:{ 'Authorization':'token '+cfg.token, 'Accept':'application/vnd.github.v3+json' } }
+  );
+  const j = await r.json();
+  if(!r.ok) throw new Error(j.message||('HTTP '+r.status));
+  return j; // {content, sha, ...}
+}
+
+async function ghPut(cfg, htmlContent, sha){
+  const encoded = btoa(unescape(encodeURIComponent(htmlContent)));
+  const body = {
+    message: 'Manual atualizado — '+new Date().toLocaleString('pt-BR'),
+    content: encoded,
+    branch:  cfg.branch,
+  };
+  if(sha) body.sha = sha;
+  const r = await fetch(
+    `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/${cfg.file}`,
+    { method:'PUT', headers:{ 'Authorization':'token '+cfg.token, 'Accept':'application/vnd.github.v3+json', 'Content-Type':'application/json' },
+      body: JSON.stringify(body) }
+  );
+  const j = await r.json();
+  if(!r.ok) throw new Error(j.message||('HTTP '+r.status));
+  return j;
+}
+
+// ── Build updated HTML ─────────────────────────────────────────
+function ghBuildHtml(){
+  const marker  = 'const DEFAULT_DATA = ';
+  const marker2 = 'let customCats = ';
+  let html = document.documentElement.outerHTML;
+
+  // Embed current data
+  const s1 = html.indexOf(marker);
+  const e1 = html.indexOf(';\n', s1) + 2;
+  if(s1 < 0) throw new Error('Marcador DEFAULT_DATA não encontrado');
+  html = html.slice(0,s1) + marker + JSON.stringify(data, null, 2) + ';\n' + html.slice(e1);
+
+  // Embed custom categories
+  const s2 = html.indexOf(marker2);
+  const e2 = html.indexOf(';\n', s2) + 2;
+  if(s2 > 0){
+    html = html.slice(0,s2) + marker2 + JSON.stringify(customCats) + ';\n' + html.slice(e2);
+  }
+  return html;
+}
+
+// ── Core push (used by button + auto-save) ─────────────────────
+async function ghPush(showToast){
+  const cfg = ghCfg();
+  if(!cfg.token || !cfg.user || !cfg.repo) return;
+
+  // Update button icon
+  const icon = document.getElementById('gh-sync-icon');
+  const btn  = document.getElementById('gh-sync-btn');
+  if(icon) icon.textContent = '⏳';
+  if(btn) btn.disabled = true;
+
+  try {
+    // Get current SHA
+    let sha = null;
+    try {
+      const info = await ghGet(cfg);
+      sha = info.sha;
+    } catch(e){
+      if(!e.message.includes('Not Found') && !e.message.includes('404')) throw e;
     }
-  });
-  if(!r.ok) throw new Error(`GitHub API ${r.status}: ${await r.text()}`);
-  return r.json();
+
+    const html = ghBuildHtml();
+    await ghPut(cfg, html, sha);
+
+    if(icon) icon.textContent = '✓';
+    if(btn){ btn.style.color='var(--green)'; btn.style.borderColor='rgba(63,185,80,.4)'; }
+    if(showToast !== false) toast('✓ Salvo no GitHub! Qualquer dispositivo verá as alterações em ~30s.', true);
+    ghBannerUpdate(cfg, 'last-save');
+
+    setTimeout(()=>{
+      if(icon) icon.textContent = '☁';
+      if(btn){ btn.style.color=''; btn.style.borderColor=''; btn.disabled=false; }
+    }, 4000);
+  } catch(e){
+    if(icon) icon.textContent = '⚠';
+    if(btn) btn.disabled = false;
+    if(showToast !== false) toast('Erro GitHub: '+e.message, false);
+    console.error('ghPush error:', e);
+    setTimeout(()=>{ if(icon) icon.textContent='☁'; if(btn) btn.style.color=''; }, 5000);
+  }
 }
 
-async function ghApiPut(cfg, path, body){
-  const r = await fetch(`https://api.github.com/repos/${cfg.user}/${cfg.repo}${path}`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `token ${cfg.token}`,
-      'Accept': 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body)
-  });
-  if(!r.ok) throw new Error(`GitHub API ${r.status}: ${await r.text()}`);
-  return r.json();
+// ── Banner update ──────────────────────────────────────────────
+function ghBannerUpdate(cfg, type){
+  const banner = document.getElementById('gh-banner');
+  const txt    = document.getElementById('gh-banner-txt');
+  if(!banner || !txt) return;
+  banner.style.display = 'flex';
+  const t = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  if(type === 'last-save'){
+    txt.innerHTML = `☁ <strong style="color:var(--blue)">${cfg.user}/${cfg.repo}</strong> — salvo às ${t}`;
+  } else {
+    txt.innerHTML = `☁ <strong style="color:var(--blue)">${cfg.user}/${cfg.repo}</strong> — auto-save ativo`;
+  }
 }
 
-async function ghTestConnection(){
-  const cfg = ghGetInputs();
-  if(!cfg.user||!cfg.repo||!cfg.token){ ghStatus('⚠ Preencha usuário, repositório e token',false); return; }
-  ghStatus('⏳ Testando conexão...', true);
-  try{
-    const info = await ghApiGet(cfg, `/contents/${cfg.file}`);
-    ghStatus(`✓ Conectado! Arquivo encontrado — ${Math.round(info.size/1024)}KB | SHA: ${info.sha.slice(0,8)}`, true);
-  }catch(e){
-    if(e.message.includes('404')) ghStatus(`✗ Arquivo não encontrado: ${cfg.file} no branch ${cfg.branch}`, false);
-    else if(e.message.includes('401')) ghStatus('✗ Token inválido ou sem permissão', false);
+// ── Open/Close panel ──────────────────────────────────────────
+function ghOpenPanel(){
+  const cfg = ghCfg();
+  const set = (id,v) => { const el=document.getElementById(id); if(el&&v) el.value=v; };
+  set('gh-user',   cfg.user   || 'gabrielandre1');
+  set('gh-repo',   cfg.repo   || 'manual-t-cnico');
+  set('gh-file',   cfg.file   || 'manual_tecnico.html');
+  set('gh-branch', cfg.branch || 'main');
+  set('gh-token',  cfg.token  || '');
+  const st = document.getElementById('gh-status');
+  if(st) st.style.display='none';
+  document.getElementById('gh-modal').classList.add('open');
+}
+
+// ── Test ──────────────────────────────────────────────────────
+async function ghTest(){
+  const cfg = ghInputs();
+  if(!cfg.user||!cfg.repo||!cfg.token){ ghStatus('⚠ Preencha usuário, repositório e token', false); return; }
+  ghStatus('⏳ Testando conexão com GitHub...', true, true);
+  try {
+    const info = await ghGet(cfg);
+    ghStatus(`✓ Conectado!<br>Arquivo: <strong>${cfg.file}</strong> (${Math.round(info.size/1024)}KB)<br>SHA: ${info.sha.slice(0,10)}...<br>Última alteração: ${new Date(info.last_modified||Date.now()).toLocaleString('pt-BR')}`, true);
+  } catch(e){
+    if(e.message.includes('Not Found')) ghStatus(`✗ Arquivo não encontrado: <strong>${cfg.file}</strong> no branch <strong>${cfg.branch}</strong>`, false);
+    else if(e.message.includes('Bad credentials')) ghStatus('✗ Token inválido — verifique se copiou corretamente e se tem permissão <strong>repo</strong>', false);
     else ghStatus('✗ Erro: '+e.message, false);
   }
 }
 
-async function ghSaveConfig(){
-  const cfg = ghGetInputs();
-  if(!cfg.user||!cfg.repo||!cfg.token){ ghStatus('⚠ Preencha todos os campos obrigatórios',false); return; }
-  ghSaveConfigLS(cfg);
-  ghStatus('⏳ Enviando para o GitHub...', true);
-  try{
-    await ghPushData(cfg);
-    ghStatus('✓ Dados salvos no GitHub! Qualquer dispositivo que abrir a URL verá as alterações.', true);
-    ghUpdateBanner(cfg);
-  }catch(e){
-    ghStatus('✗ Erro ao salvar: '+e.message, false);
+// ── Save config + push ────────────────────────────────────────
+async function ghSave(){
+  const cfg = ghInputs();
+  if(!cfg.user||!cfg.repo||!cfg.token){ ghStatus('⚠ Preencha todos os campos', false); return; }
+  ghCfgSet(cfg);
+  window.ghAutoSave = true;
+  ghBannerUpdate(cfg, 'connected');
+  ghStatus('⏳ Salvando no GitHub...', true, true);
+  try {
+    let sha = null;
+    try { const info = await ghGet(cfg); sha = info.sha; } catch(e){}
+    await ghPut(cfg, ghBuildHtml(), sha);
+    ghStatus('✓ Salvo com sucesso!<br>🔄 Auto-save ativado — edições futuras são enviadas automaticamente após 3 segundos.<br>⏱ GitHub Pages atualiza em ~30-60 segundos após cada commit.', true);
+    ghBannerUpdate(cfg, 'last-save');
+    toast('✓ Configuração salva e dados enviados ao GitHub!', true);
+  } catch(e){
+    ghStatus('✗ Erro ao salvar: '+e.message+'<br><br>Verifique se o token tem permissão <strong>repo</strong> e se o repositório existe.', false);
   }
 }
 
-async function ghSync(){
-  const cfg = ghLoadConfig();
-  if(!cfg.token){ ghOpenPanel(); return; }
-  const btn=document.getElementById('gh-sync-btn');
-  const icon=document.getElementById('gh-sync-icon');
-  btn.disabled=true; icon.textContent='⏳';
-  try{
-    await ghPushData(cfg);
-    icon.textContent='✓'; btn.style.color='var(--green)'; btn.style.borderColor='rgba(63,185,80,.4)';
-    toast('✓ Salvo no GitHub com sucesso!',true);
-    setTimeout(()=>{ icon.textContent='☁'; btn.style.color=''; btn.style.borderColor=''; btn.disabled=false; },3000);
-  }catch(e){
-    icon.textContent='✗'; btn.style.color='var(--accent2)';
-    toast('Erro GitHub: '+e.message,false);
-    setTimeout(()=>{ icon.textContent='☁'; btn.style.color=''; btn.disabled=false; },4000);
-  }
-}
-
-async function ghPushData(cfg){
-  // Get current file SHA (required for update)
-  let sha = null;
-  try{
-    const info = await ghApiGet(cfg, `/contents/${cfg.file}`);
-    sha = info.sha;
-  }catch(e){
-    if(!e.message.includes('404')) throw e;
-    // File doesn't exist yet — will be created
-  }
-
-  // Build updated HTML with current data embedded
-  const serialized = JSON.stringify(data, null, 2);
-  const marker = 'const DEFAULT_DATA = ';
-  let html = document.documentElement.outerHTML;
-  const s = html.indexOf(marker);
-  const e2 = html.indexOf(';\n', s) + 2;
-  if(s<0) throw new Error('Marcador DEFAULT_DATA não encontrado no HTML');
-  const newHtml = html.slice(0,s) + marker + serialized + ';\n' + html.slice(e2);
-
-  // Also embed custom categories
-  const catsMarker = "let customCats = [];";
-  const catsSerialized = `let customCats = ${JSON.stringify(customCats)};`;
-  const finalHtml = newHtml.includes(catsMarker)
-    ? newHtml.replace(catsMarker, catsSerialized)
-    : newHtml;
-
-  const encoded = btoa(unescape(encodeURIComponent(finalHtml)));
-
-  const now = new Date().toLocaleString('pt-BR');
-  const body = {
-    message: `Manual atualizado via browser — ${now}`,
-    content: encoded,
-    branch: cfg.branch,
-  };
-  if(sha) body.sha = sha;
-
-  await ghApiPut(cfg, `/contents/${cfg.file}`, body);
-}
-
+// ── Pull from GitHub ──────────────────────────────────────────
 async function ghPull(){
-  const cfg = ghGetInputs();
-  if(!cfg.user||!cfg.repo||!cfg.token){ ghStatus('⚠ Preencha os campos antes de puxar',false); return; }
-  ghStatus('⏳ Baixando dados do GitHub...', true);
-  try{
-    const info = await ghApiGet(cfg, `/contents/${cfg.file}`);
-    const raw = decodeURIComponent(escape(atob(info.content.replace(/\n/g,''))));
-    // Extract DEFAULT_DATA from the file
-    const marker = 'const DEFAULT_DATA = ';
-    const s = raw.indexOf(marker);
-    const e2 = raw.indexOf(';\n', s) + 1;
-    if(s<0) throw new Error('DEFAULT_DATA não encontrado no arquivo do GitHub');
-    const jsonStr = raw.slice(s+marker.length, e2);
-    const remoteData = JSON.parse(jsonStr);
+  const cfg = ghInputs();
+  if(!cfg.user||!cfg.repo||!cfg.token){ ghStatus('⚠ Preencha os campos antes de puxar', false); return; }
+  ghStatus('⏳ Baixando dados do GitHub...', true, true);
+  try {
+    const info = await ghGet(cfg);
+    const raw  = decodeURIComponent(escape(atob(info.content.replace(/\n/g,''))));
+
+    // Extract DEFAULT_DATA
+    const m1 = 'const DEFAULT_DATA = ';
+    const s1 = raw.indexOf(m1);
+    if(s1 < 0) throw new Error('DEFAULT_DATA não encontrado no arquivo do GitHub');
+    const e1 = raw.indexOf(';\n', s1)+1;
+    const remoteData = JSON.parse(raw.slice(s1+m1.length, e1));
 
     // Extract customCats
-    const catsMarker = 'let customCats = ';
-    const cs = raw.indexOf(catsMarker);
-    if(cs>0){
-      const ce = raw.indexOf(';\n', cs)+1;
-      const catsJson = raw.slice(cs+catsMarker.length, ce);
-      try{
-        customCats = JSON.parse(catsJson);
-        localStorage.setItem(SC, JSON.stringify(customCats));
-      }catch(e){}
+    const m2 = 'let customCats = ';
+    const s2 = raw.indexOf(m2);
+    if(s2 > 0){
+      const e2 = raw.indexOf(';\n', s2)+1;
+      try{ customCats = JSON.parse(raw.slice(s2+m2.length, e2)); localStorage.setItem(SC, JSON.stringify(customCats)); }catch(e){}
     }
 
+    // Update local state
     data = remoteData;
     nextId = Math.max(0, ...data.map(d=>d.id)) + 1;
     persist(data);
     renderNav();
     applyFilters();
     populateCatSelect();
-    ghStatus(`✓ Dados atualizados! ${data.length} tópicos carregados do GitHub.`, true);
-    ghSaveConfigLS(cfg);
-    ghUpdateBanner(cfg);
-    toast('✓ Dados atualizados do GitHub!', true);
-  }catch(e){
+
+    ghCfgSet(cfg);
+    window.ghAutoSave = true;
+    ghBannerUpdate(cfg, 'connected');
+    ghStatus(`✓ Dados atualizados do GitHub!<br>${data.length} tópicos carregados.<br>Auto-save ativado.`, true);
+    toast('✓ Dados do GitHub carregados — '+data.length+' tópicos', true);
+  } catch(e){
     ghStatus('✗ Erro ao puxar: '+e.message, false);
   }
 }
 
-function ghUpdateBanner(cfg){
-  const banner = document.getElementById('gh-banner');
-  const txt = document.getElementById('gh-banner-txt');
-  if(!cfg||!cfg.user) return;
-  banner.style.display='flex';
-  txt.innerHTML=`☁ Conectado: <strong style="color:var(--blue)">${cfg.user}/${cfg.repo}</strong> · ${cfg.file} (${cfg.branch}) · Auto-salvar ativado`;
-  // Auto-save on every persist
-  ghAutoSaveEnabled = true;
-}
+// ── Close on overlay click ─────────────────────────────────────
+document.getElementById('gh-modal')?.addEventListener('click', e=>{
+  if(e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
 
-let ghAutoSaveEnabled = false;
-const _origPersist = persist;
-
-// Override persist to auto-sync with GitHub when configured
-const origPersistStr = persist.toString();
-function persist(d){
-  localStorage.setItem(SK,JSON.stringify(d));
-  const n=new Date();
-  const s=n.toLocaleDateString('pt-BR')+' '+n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  localStorage.setItem(SD,s);
-  const dateEl=document.getElementById('s-date');
-  if(dateEl) dateEl.textContent=s;
-  // Debounced GitHub auto-save
-  if(ghAutoSaveEnabled){
-    clearTimeout(ghDebounceT);
-    ghDebounceT=setTimeout(async()=>{
-      const cfg=ghLoadConfig();
-      if(!cfg.token) return;
-      const icon=document.getElementById('gh-sync-icon');
-      if(icon){ icon.textContent='⏳'; }
-      try{
-        await ghPushData(cfg);
-        if(icon){ icon.textContent='☁'; }
-        document.getElementById('gh-banner-txt').innerHTML=`☁ Salvo no GitHub: <strong style="color:var(--green)">${new Date().toLocaleTimeString('pt-BR')}</strong> · ${cfg.user}/${cfg.repo}`;
-      }catch(e){
-        if(icon){ icon.textContent='⚠'; }
-      }
-    }, 3500);
-  }
-}
-let ghDebounceT=null;
-
-// On load: restore GitHub config and check banner
+// ── On page load: restore config and activate auto-save ────────
 (function ghInit(){
-  const cfg = ghLoadConfig();
+  const cfg = ghCfg();
   if(cfg.user && cfg.token){
-    ghUpdateBanner(cfg);
+    window.ghAutoSave = true;
+    ghBannerUpdate(cfg, 'connected');
+    // Populate inputs (modal might not exist yet - will load when opened)
+    console.log('GitHub sync ready:', cfg.user+'/'+cfg.repo);
   }
 })();
-
-// Close modal on overlay click
-document.getElementById('gh-modal')?.addEventListener('click',e=>{ if(e.target===e.currentTarget) ghClosePanel(); });
 </script>
