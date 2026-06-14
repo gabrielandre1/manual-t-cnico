@@ -1589,7 +1589,7 @@ const DEFAULT_CATS = [
   {key:'ssh',   icon:'💻', label:'SSH / Erros'},
   {key:'misc',  icon:'⚙️', label:'Misc / Outros'},
 ];
-let customCats = [];
+let customCats = [{"key":"github","icon":"📁","label":"GitHub"}];
 function loadCats(){ try{ const r=localStorage.getItem(SC); if(r) customCats=JSON.parse(r); }catch(e){ customCats=[]; } }
 function saveCats(){ localStorage.setItem(SC,JSON.stringify(customCats)); }
 function allCats(){ return [...DEFAULT_CATS,...customCats]; }
