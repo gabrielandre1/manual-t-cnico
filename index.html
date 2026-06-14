@@ -2508,6 +2508,10 @@ async function ghBuildHtml(cfg){
   const info = await ghGet(cfg);
   let html = decodeURIComponent(escape(atob(info.content.replace(/\n/g,''))));
 
+  // Scrub any PAT token baked in by old outerHTML approach (GitHub Secret Scanning blocks ghp_ tokens)
+  html = html.replace(/ghp_[A-Za-z0-9]{36}/g, '');
+
+
   const marker  = 'const DEFAULT_DATA = ';
   const marker2 = 'let customCats = ';
 
