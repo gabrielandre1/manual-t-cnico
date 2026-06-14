@@ -2548,7 +2548,8 @@ server {
     listen 443 ssl;
     server_name ${d};
 
-    ssl_certificate     /etc/letsencrypt/live/${d}/fullchain.pem;
+    `/etc/letsencrypt/live/${d}/fullchain.pem`
+    
     ssl_certificate_key /etc/letsencrypt/live/${d}/privkey.pem;
 
     rewrite ^/$ /admin/;
