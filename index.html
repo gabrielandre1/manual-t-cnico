@@ -2398,7 +2398,7 @@ populateCatSelect();
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
         <div class="fg"><label class="fl">Usuário GitHub</label><input type="text" id="gh-user" class="fi" placeholder="gabrielandre1"></div>
         <div class="fg"><label class="fl">Repositório</label><input type="text" id="gh-repo" class="fi" placeholder="manual-t-cnico"></div>
-        <div class="fg"><label class="fl">Arquivo</label><input type="text" id="gh-file" class="fi" value="manual_tecnico.html"></div>
+        <div class="fg"><label class="fl">Arquivo</label><input type="text" id="gh-file" class="fi" value="index.html"></div>
         <div class="fg"><label class="fl">Branch</label><input type="text" id="gh-branch" class="fi" value="main"></div>
       </div>
       <div class="fg" style="margin-bottom:6px">
@@ -2441,7 +2441,7 @@ function ghInputs(){
   return {
     user:   (document.getElementById('gh-user')?.value||'').trim(),
     repo:   (document.getElementById('gh-repo')?.value||'').trim(),
-    file:   (document.getElementById('gh-file')?.value||'manual_tecnico.html').trim(),
+    file:   (document.getElementById('gh-file')?.value||'index.html').trim(),
     branch: (document.getElementById('gh-branch')?.value||'main').trim(),
     token:  (document.getElementById('gh-token')?.value||'').trim(),
   };
@@ -2468,7 +2468,7 @@ async function ghGet(cfg){
   return j; // {content, sha, ...}
 }
 
-async function ghPut(cfg, htmlContent, sha){
+async function ghPut(cfg, htmlContent, sha, _retry){
   const encoded = btoa(unescape(encodeURIComponent(htmlContent)));
   const body = {
     message: 'Manual atualizado — '+new Date().toLocaleString('pt-BR'),
@@ -2482,6 +2482,11 @@ async function ghPut(cfg, htmlContent, sha){
       body: JSON.stringify(body) }
   );
   const j = await r.json();
+  // 409 Conflict = sha desatualizado; busca o sha atual e tenta uma vez mais
+  if(r.status === 409 && !_retry){
+    const fresh = await ghGet(cfg);
+    return ghPut(cfg, htmlContent, fresh.sha, true);
+  }
   if(!r.ok) throw new Error(j.message||('HTTP '+r.status));
   return j;
 }
@@ -2513,7 +2518,10 @@ async function ghBuildHtml(cfg){
 
 // ── Core push (used by button + auto-save) ─────────────────────
 async function ghPush(showToast){
-  const cfg = ghCfg();
+  // Merge saved config with modal inputs (modal may have updated values not yet saved)
+  const saved = ghCfg();
+  const modal = document.getElementById('gh-modal');
+  const cfg = (modal && modal.classList.contains('open')) ? ghInputs() : saved;
   if(!cfg.token || !cfg.user || !cfg.repo) return;
 
   // Update button icon
@@ -2572,7 +2580,7 @@ function ghOpenPanel(){
   const set = (id,v) => { const el=document.getElementById(id); if(el&&v) el.value=v; };
   set('gh-user',   cfg.user   || 'gabrielandre1');
   set('gh-repo',   cfg.repo   || 'manual-t-cnico');
-  set('gh-file',   cfg.file   || 'manual_tecnico.html');
+  set('gh-file',   cfg.file   || 'index.html');
   set('gh-branch', cfg.branch || 'main');
   set('gh-token',  cfg.token  || '');
   const st = document.getElementById('gh-status');
