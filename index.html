@@ -2468,27 +2468,37 @@ async function ghGet(cfg){
   return j; // {content, sha, ...}
 }
 
-async function ghPut(cfg, htmlContent, sha, _retry){
+async function ghPut(cfg, htmlContent, sha){
+  // Pre-encode once — encoding is expensive, don't redo it on each retry
   const encoded = btoa(unescape(encodeURIComponent(htmlContent)));
-  const body = {
-    message: 'Manual atualizado — '+new Date().toLocaleString('pt-BR'),
-    content: encoded,
-    branch:  cfg.branch,
-  };
-  if(sha) body.sha = sha;
-  const r = await fetch(
-    `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/${cfg.file}`,
-    { method:'PUT', headers:{ 'Authorization':'token '+cfg.token, 'Accept':'application/vnd.github.v3+json', 'Content-Type':'application/json' },
-      body: JSON.stringify(body) }
-  );
-  const j = await r.json();
-  // 409 Conflict = sha desatualizado; busca o sha atual e tenta uma vez mais
-  if(r.status === 409 && !_retry){
-    const fresh = await ghGet(cfg);
-    return ghPut(cfg, htmlContent, fresh.sha, true);
+
+  // Retry loop: on 409 (SHA conflict) fetch the latest SHA and retry immediately
+  for(let attempt = 0; attempt < 4; attempt++){
+    if(attempt > 0){
+      // Small back-off so GitHub Pages commit has time to settle
+      await new Promise(res => setTimeout(res, 600 * attempt));
+      const fresh = await ghGet(cfg);
+      sha = fresh.sha;
+    }
+    console.log(`[ghPut] attempt ${attempt+1}, sha=${sha ? sha.slice(0,10) : 'null'}`);
+    const body = {
+      message: 'Manual atualizado — '+new Date().toLocaleString('pt-BR'),
+      content: encoded,
+      branch:  cfg.branch,
+    };
+    if(sha) body.sha = sha;
+    const r = await fetch(
+      `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/${cfg.file}`,
+      { method:'PUT', headers:{ 'Authorization':'token '+cfg.token, 'Accept':'application/vnd.github.v3+json', 'Content-Type':'application/json' },
+        body: JSON.stringify(body) }
+    );
+    const j = await r.json();
+    console.log(`[ghPut] response ${r.status}`, j.message||'ok');
+    if(r.status === 409) continue;   // SHA still stale — loop again
+    if(!r.ok) throw new Error(j.message||('HTTP '+r.status));
+    return j;
   }
-  if(!r.ok) throw new Error(j.message||('HTTP '+r.status));
-  return j;
+  throw new Error('409 Conflict persistente: repositório está recebendo commits externos. Tente novamente em alguns segundos.');
 }
 
 // ── Build updated HTML ─────────────────────────────────────────
@@ -2616,6 +2626,7 @@ async function ghSave(){
   ghStatus('⏳ Salvando no GitHub...', true, true);
   try {
     const built = await ghBuildHtml(cfg);
+    ghStatus(`⏳ SHA obtido: ${built.sha ? built.sha.slice(0,10) : 'null'} — enviando PUT...`, true, true);
     await ghPut(cfg, built.html, built.sha);
     ghStatus('✓ Salvo com sucesso!<br>🔄 Auto-save ativado — edições futuras são enviadas automaticamente após 3 segundos.<br>⏱ GitHub Pages atualiza em ~30-60 segundos após cada commit.', true);
     ghBannerUpdate(cfg, 'last-save');
