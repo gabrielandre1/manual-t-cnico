@@ -1965,8 +1965,7 @@ function toast(msg,ok){ const t=document.getElementById('toast'); t.textContent=
 
 // ─── EXPORT ───────────────────────────────────────────────────────
 function exportHTML(){
-  // Escape </script> so the HTML parser doesn't terminate the script block early
-  const serialized = JSON.stringify(data,null,2).replace(/<\/script>/gi, '<\\/script>');
+  const serialized = JSON.stringify(data,null,2);
   const marker = 'const DEFAULT_DATA = ';
   let html = document.documentElement.outerHTML;
   const s = html.indexOf(marker);
@@ -2399,7 +2398,7 @@ populateCatSelect();
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
         <div class="fg"><label class="fl">Usuário GitHub</label><input type="text" id="gh-user" class="fi" placeholder="gabrielandre1"></div>
         <div class="fg"><label class="fl">Repositório</label><input type="text" id="gh-repo" class="fi" placeholder="manual-t-cnico"></div>
-        <div class="fg"><label class="fl">Arquivo</label><input type="text" id="gh-file" class="fi" value="index.html"></div>
+        <div class="fg"><label class="fl">Arquivo</label><input type="text" id="gh-file" class="fi" value="manual_tecnico.html"></div>
         <div class="fg"><label class="fl">Branch</label><input type="text" id="gh-branch" class="fi" value="main"></div>
       </div>
       <div class="fg" style="margin-bottom:6px">
@@ -2442,7 +2441,7 @@ function ghInputs(){
   return {
     user:   (document.getElementById('gh-user')?.value||'').trim(),
     repo:   (document.getElementById('gh-repo')?.value||'').trim(),
-    file:   (document.getElementById('gh-file')?.value||'index.html').trim(),
+    file:   (document.getElementById('gh-file')?.value||'manual_tecnico.html').trim(),
     branch: (document.getElementById('gh-branch')?.value||'main').trim(),
     token:  (document.getElementById('gh-token')?.value||'').trim(),
   };
@@ -2470,76 +2469,47 @@ async function ghGet(cfg){
 }
 
 async function ghPut(cfg, htmlContent, sha){
-  // Pre-encode once — encoding is expensive, don't redo it on each retry
   const encoded = btoa(unescape(encodeURIComponent(htmlContent)));
-
-  // Retry loop: on 409 (SHA conflict) fetch the latest SHA and retry immediately
-  for(let attempt = 0; attempt < 4; attempt++){
-    if(attempt > 0){
-      // Small back-off so GitHub Pages commit has time to settle
-      await new Promise(res => setTimeout(res, 600 * attempt));
-      const fresh = await ghGet(cfg);
-      sha = fresh.sha;
-    }
-    console.log(`[ghPut] attempt ${attempt+1}, sha=${sha ? sha.slice(0,10) : 'null'}`);
-    const body = {
-      message: 'Manual atualizado — '+new Date().toLocaleString('pt-BR'),
-      content: encoded,
-      branch:  cfg.branch,
-    };
-    if(sha) body.sha = sha;
-    const r = await fetch(
-      `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/${cfg.file}`,
-      { method:'PUT', headers:{ 'Authorization':'token '+cfg.token, 'Accept':'application/vnd.github.v3+json', 'Content-Type':'application/json' },
-        body: JSON.stringify(body) }
-    );
-    const j = await r.json();
-    console.log(`[ghPut] response ${r.status}`, j.message||'ok');
-    if(r.status === 409) continue;   // SHA still stale — loop again
-    if(!r.ok) throw new Error(j.message||('HTTP '+r.status));
-    return j;
-  }
-  throw new Error('409 Conflict persistente: repositório está recebendo commits externos. Tente novamente em alguns segundos.');
+  const body = {
+    message: 'Manual atualizado — '+new Date().toLocaleString('pt-BR'),
+    content: encoded,
+    branch:  cfg.branch,
+  };
+  if(sha) body.sha = sha;
+  const r = await fetch(
+    `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/${cfg.file}`,
+    { method:'PUT', headers:{ 'Authorization':'token '+cfg.token, 'Accept':'application/vnd.github.v3+json', 'Content-Type':'application/json' },
+      body: JSON.stringify(body) }
+  );
+  const j = await r.json();
+  if(!r.ok) throw new Error(j.message||('HTTP '+r.status));
+  return j;
 }
 
 // ── Build updated HTML ─────────────────────────────────────────
-// ── Build updated HTML using raw source from GitHub (avoids outerHTML template-literal interpolation bug) ──
-async function ghBuildHtml(cfg){
-  // Fetch the raw source file from GitHub so template literals like ${d} are NOT expanded
-  const info = await ghGet(cfg);
-  let html = decodeURIComponent(escape(atob(info.content.replace(/\n/g,''))));
-
-  // Scrub any PAT token baked in by old outerHTML approach (GitHub Secret Scanning blocks ghp_ tokens)
-  html = html.replace(/ghp_[A-Za-z0-9]{36}/g, '');
-
-
+function ghBuildHtml(){
   const marker  = 'const DEFAULT_DATA = ';
   const marker2 = 'let customCats = ';
-
-  // Safely serialize data — escape </script> to prevent HTML parser from closing the script tag
-  function safeJson(obj){ return JSON.stringify(obj, null, 2).replace(/<\/script>/gi, '<\\/script>'); }
+  let html = document.documentElement.outerHTML;
 
   // Embed current data
   const s1 = html.indexOf(marker);
   const e1 = html.indexOf(';\n', s1) + 2;
   if(s1 < 0) throw new Error('Marcador DEFAULT_DATA não encontrado');
-  html = html.slice(0,s1) + marker + safeJson(data) + ';\n' + html.slice(e1);
+  html = html.slice(0,s1) + marker + JSON.stringify(data, null, 2) + ';\n' + html.slice(e1);
 
   // Embed custom categories
   const s2 = html.indexOf(marker2);
   const e2 = html.indexOf(';\n', s2) + 2;
   if(s2 > 0){
-    html = html.slice(0,s2) + marker2 + safeJson(customCats) + ';\n' + html.slice(e2);
+    html = html.slice(0,s2) + marker2 + JSON.stringify(customCats) + ';\n' + html.slice(e2);
   }
-  return { html, sha: info.sha };
+  return html;
 }
 
 // ── Core push (used by button + auto-save) ─────────────────────
 async function ghPush(showToast){
-  // Merge saved config with modal inputs (modal may have updated values not yet saved)
-  const saved = ghCfg();
-  const modal = document.getElementById('gh-modal');
-  const cfg = (modal && modal.classList.contains('open')) ? ghInputs() : saved;
+  const cfg = ghCfg();
   if(!cfg.token || !cfg.user || !cfg.repo) return;
 
   // Update button icon
@@ -2549,16 +2519,17 @@ async function ghPush(showToast){
   if(btn) btn.disabled = true;
 
   try {
-    // ghBuildHtml fetches raw source from GitHub (avoids outerHTML interpolation bug) and returns {html, sha}
-    let built;
+    // Get current SHA
+    let sha = null;
     try {
-      built = await ghBuildHtml(cfg);
+      const info = await ghGet(cfg);
+      sha = info.sha;
     } catch(e){
       if(!e.message.includes('Not Found') && !e.message.includes('404')) throw e;
-      built = { html: null, sha: null };
     }
-    if(!built.html) throw new Error('Não foi possível obter o HTML base do GitHub');
-    await ghPut(cfg, built.html, built.sha);
+
+    const html = ghBuildHtml();
+    await ghPut(cfg, html, sha);
 
     if(icon) icon.textContent = '✓';
     if(btn){ btn.style.color='var(--green)'; btn.style.borderColor='rgba(63,185,80,.4)'; }
@@ -2592,16 +2563,13 @@ function ghBannerUpdate(cfg, type){
   }
 }
 
-// ── ghSync alias (used by banner button) ─────────────────────
-function ghSync(){ ghPush(true); }
-
 // ── Open/Close panel ──────────────────────────────────────────
 function ghOpenPanel(){
   const cfg = ghCfg();
   const set = (id,v) => { const el=document.getElementById(id); if(el&&v) el.value=v; };
   set('gh-user',   cfg.user   || 'gabrielandre1');
   set('gh-repo',   cfg.repo   || 'manual-t-cnico');
-  set('gh-file',   cfg.file   || 'index.html');
+  set('gh-file',   cfg.file   || 'manual_tecnico.html');
   set('gh-branch', cfg.branch || 'main');
   set('gh-token',  cfg.token  || '');
   const st = document.getElementById('gh-status');
@@ -2633,9 +2601,9 @@ async function ghSave(){
   ghBannerUpdate(cfg, 'connected');
   ghStatus('⏳ Salvando no GitHub...', true, true);
   try {
-    const built = await ghBuildHtml(cfg);
-    ghStatus(`⏳ SHA obtido: ${built.sha ? built.sha.slice(0,10) : 'null'} — enviando PUT...`, true, true);
-    await ghPut(cfg, built.html, built.sha);
+    let sha = null;
+    try { const info = await ghGet(cfg); sha = info.sha; } catch(e){}
+    await ghPut(cfg, ghBuildHtml(), sha);
     ghStatus('✓ Salvo com sucesso!<br>🔄 Auto-save ativado — edições futuras são enviadas automaticamente após 3 segundos.<br>⏱ GitHub Pages atualiza em ~30-60 segundos após cada commit.', true);
     ghBannerUpdate(cfg, 'last-save');
     toast('✓ Configuração salva e dados enviados ao GitHub!', true);
