@@ -1965,7 +1965,8 @@ function toast(msg,ok){ const t=document.getElementById('toast'); t.textContent=
 
 // ─── EXPORT ───────────────────────────────────────────────────────
 function exportHTML(){
-  const serialized = JSON.stringify(data,null,2);
+  // Escape <\/script> so the HTML parser doesn't terminate the script block early
+  const serialized = JSON.stringify(data,null,2).replace(/<\/script>/gi, '<\\/script>');
   const marker = 'const DEFAULT_DATA = ';
   let html = document.documentElement.outerHTML;
   const s = html.indexOf(marker);
@@ -2508,24 +2509,27 @@ async function ghBuildHtml(cfg){
   const info = await ghGet(cfg);
   let html = decodeURIComponent(escape(atob(info.content.replace(/\n/g,''))));
 
-  // Scrub any PAT token baked in by old outerHTML approach (GitHub Secret Scanning blocks ghp_ tokens)
+  // Scrub any PAT token baked in by old outerHTML approach (Secret Scanning blocks ghp_ tokens)
   html = html.replace(/ghp_[A-Za-z0-9]{36}/g, '');
 
 
   const marker  = 'const DEFAULT_DATA = ';
   const marker2 = 'let customCats = ';
 
+  // Safely serialize data — escape <\/script> to prevent HTML parser from closing the script tag
+  function safeJson(obj){ return JSON.stringify(obj, null, 2).replace(/<\/script>/gi, '<\\/script>'); }
+
   // Embed current data
   const s1 = html.indexOf(marker);
   const e1 = html.indexOf(';\n', s1) + 2;
   if(s1 < 0) throw new Error('Marcador DEFAULT_DATA não encontrado');
-  html = html.slice(0,s1) + marker + JSON.stringify(data, null, 2) + ';\n' + html.slice(e1);
+  html = html.slice(0,s1) + marker + safeJson(data) + ';\n' + html.slice(e1);
 
   // Embed custom categories
   const s2 = html.indexOf(marker2);
   const e2 = html.indexOf(';\n', s2) + 2;
   if(s2 > 0){
-    html = html.slice(0,s2) + marker2 + JSON.stringify(customCats) + ';\n' + html.slice(e2);
+    html = html.slice(0,s2) + marker2 + safeJson(customCats) + ';\n' + html.slice(e2);
   }
   return { html, sha: info.sha };
 }
